@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -12,7 +11,6 @@ import {
   Terminal,
   Shield,
   Zap,
-  Upload,
   Plug,
   LogOut,
 } from 'lucide-react';
@@ -33,7 +31,6 @@ const navItems = [
   { href: '/reports', icon: FileBarChart, label: 'Reports' },
   { href: '/threat-intelligence', icon: ShieldCheck, label: 'Threat Intel' },
   { href: '/analysis', icon: Zap, label: 'Analysis' },
-  { href: '/ingestion', icon: Upload, label: 'Ingestion' },
   { href: '/collectors', icon: Plug, label: 'Collectors' },
   { href: '/terminal', icon: Terminal, label: 'Terminal' },
 ];
