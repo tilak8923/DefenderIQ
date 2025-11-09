@@ -9,8 +9,4 @@ runConfig:
 # Python collector to send data from outside the cloud environment.
 rewrites:
   - source: /api/ingest
-    run:
-      # The service ID of the App Hosting backend, which is always "run"
-      serviceId: run
-      # Pin the rewrite to a specific tag, which is the latest by default
-      tag: latest
+    destination: /api/ingest
