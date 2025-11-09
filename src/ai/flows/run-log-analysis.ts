@@ -5,7 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { db } from '@/lib/firebase';
+import { initializeFirebase } from '@/firebase';
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import type { LogEntry, AlertRule } from '@/lib/types';
 
@@ -25,8 +25,8 @@ export type RunLogAnalysisOutput = z.infer<typeof RunLogAnalysisOutputSchema>;
 
 
 // This is the main exported function that the frontend will call
-export async function runLogAnalysisForUser(userId: string): Promise<RunLogAnalysisOutput> {
-    return runLogAnalysisFlow({ userId });
+export async function runLogAnalysisForUser(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
+    return runLogAnalysisFlow(input);
 }
 
 
@@ -70,15 +70,16 @@ const runLogAnalysisFlow = ai.defineFlow(
     outputSchema: RunLogAnalysisOutputSchema,
   },
   async ({ userId }) => {
+    const { firestore } = initializeFirebase();
     // 1. Fetch all enabled alert rules from Firestore
-    const rulesQuery = query(collection(db, 'users', userId, 'alertRules'), where("enabled", "==", true));
+    const rulesQuery = query(collection(firestore, 'users', userId, 'alertRules'), where("enabled", "==", true));
     const rulesSnapshot = await getDocs(rulesQuery);
     const rules: AlertRule[] = rulesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlertRule));
     
     // 2. Fetch all logs from Firestore that have not been analyzed
     // In a real app, you'd add a flag 'analyzed: true' to logs and query for 'analyzed: false'
     // For simplicity, we'll re-analyze all logs each time.
-    const logsSnapshot = await getDocs(collection(db, 'users', userId, 'logs'));
+    const logsSnapshot = await getDocs(collection(firestore, 'users', userId, 'logs'));
     const logs: LogEntry[] = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
     
     let alertsCreated = 0;
@@ -93,11 +94,12 @@ const runLogAnalysisFlow = ai.defineFlow(
 
         if (output?.isMatch) {
           // 4. If AI confirms a match, create a new alert in Firestore
-          await addDoc(collection(db, 'users', userId, 'alerts'), {
+          await addDoc(collection(firestore, 'users', userId, 'alerts'), {
             severity: rule.severity,
             description: output.alertDescription || `Alert triggered by rule: ${rule.name}`,
             timestamp: new Date().toISOString(),
             status: 'Active',
+            userId: userId,
           });
           alertsCreated++;
         }

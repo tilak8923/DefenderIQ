@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
-import { db } from './index';
+import { initializeFirebase } from './index';
 import { defaultAlertRules, sampleLogEntries, recentAlerts } from '@/lib/data';
 
 
@@ -24,29 +24,30 @@ import { defaultAlertRules, sampleLogEntries, recentAlerts } from '@/lib/data';
  * @param userId The ID of the user to seed data for.
  */
 export async function seedInitialData(userId: string) {
+  const { firestore } = initializeFirebase();
   const userInitializedKey = `tsiem-user-initialized-${userId}`;
   if (localStorage.getItem(userInitializedKey)) {
     return; // User has already been initialized
   }
 
-  const batch = writeBatch(db);
+  const batch = writeBatch(firestore);
 
   // Add default alert rules
-  const rulesCollection = collection(db, 'users', userId, 'alertRules');
+  const rulesCollection = collection(firestore, 'users', userId, 'alertRules');
   defaultAlertRules.forEach((rule) => {
     const newRuleRef = doc(rulesCollection);
     batch.set(newRuleRef, rule);
   });
 
   // Add sample logs
-  const logsCollection = collection(db, 'users', userId, 'logs');
+  const logsCollection = collection(firestore, 'users', userId, 'logs');
   sampleLogEntries.forEach((log) => {
     const newLogRef = doc(logsCollection);
     batch.set(newLogRef, log);
   });
 
   // Add initial alerts
-  const alertsCollection = collection(db, 'users', userId, 'alerts');
+  const alertsCollection = collection(firestore, 'users', userId, 'alerts');
   recentAlerts.forEach((alert) => {
     const newAlertRef = doc(alertsCollection);
     batch.set(newAlertRef, alert);

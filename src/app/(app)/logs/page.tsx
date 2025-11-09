@@ -22,7 +22,7 @@ import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import type { LogEntry } from '@/lib/types';
 
 
@@ -41,14 +41,15 @@ const getSeverityBadgeVariant = (severity: string) => {
 
 export default function LogsPage() {
   const userId = useUserId();
+  const firestore = useFirestore();
   const [allLogEntries, setAllLogEntries] = useState<LogEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('ALL');
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !firestore) return;
     
-    const logsQuery = query(collection(db, 'users', userId, 'logs'));
+    const logsQuery = query(collection(firestore, 'users', userId, 'logs'));
     
     const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
         const logsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
@@ -56,7 +57,7 @@ export default function LogsPage() {
     });
 
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, firestore]);
 
   const filteredLogs = allLogEntries.filter((log) => {
     const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||

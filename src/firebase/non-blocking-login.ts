@@ -9,7 +9,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { getDoc, doc, setDoc } from 'firebase/firestore';
-import { db } from './index';
+import { initializeFirebase } from './index';
 import { seedInitialData } from './non-blocking-updates';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -23,10 +23,11 @@ export function initiateEmailSignUp(
   email: string,
   password: string
 ): Promise<void> {
+  const { firestore } = initializeFirebase();
   return createUserWithEmailAndPassword(authInstance, email, password).then(
     async (userCredential) => {
       const user = userCredential.user;
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(firestore, 'users', user.uid);
       await setDoc(userRef, {
         id: user.uid,
         email: user.email,
@@ -50,11 +51,12 @@ export function initiateEmailSignIn(
 
 /** Signs in the user with Google using a popup. */
 export async function signInWithGoogle(auth: Auth) {
+  const { firestore } = initializeFirebase();
   const provider = new GoogleAuthProvider();
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-    const userRef = doc(db, 'users', user.uid);
+    const userRef = doc(firestore, 'users', user.uid);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {

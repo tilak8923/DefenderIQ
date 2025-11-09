@@ -16,19 +16,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, writeBatch, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import { Loader2, Upload } from 'lucide-react';
 import { parseLogEntries } from '@/ai/flows/parse-log-entries';
 
 
 export default function IngestionPage() {
   const userId = useUserId();
+  const firestore = useFirestore();
   const [logInput, setLogInput] = useState('');
   const [running, setRunning] = useState(false);
   const { toast } = useToast();
 
   const handleImport = async () => {
-    if (!userId) {
+    if (!userId || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -54,8 +55,8 @@ export default function IngestionPage() {
       }
 
       // Use a batch write for efficiency
-      const batch = writeBatch(db);
-      const logsCollection = collection(db, 'users', userId, 'logs');
+      const batch = writeBatch(firestore);
+      const logsCollection = collection(firestore, 'users', userId, 'logs');
       
       parsedLogs.forEach(log => {
         const docRef = doc(logsCollection); // Create a new document reference with a unique ID

@@ -36,7 +36,7 @@ export default function AnalysisPage() {
     setOutput(null);
 
     try {
-      const result = await runLogAnalysisForUser(userId);
+      const result = await runLogAnalysisForUser({ userId });
       setOutput(result);
       if (result.alertsCreated > 0) {
         toast({

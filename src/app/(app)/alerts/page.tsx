@@ -35,7 +35,7 @@ import { PlusCircle, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, onSnapshot, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import type { AlertRule } from '@/lib/types';
 
 
@@ -54,6 +54,7 @@ const getSeverityBadgeVariant = (severity: string) => {
 
 export default function AlertsPage() {
     const userId = useUserId();
+    const firestore = useFirestore();
     const [rules, setRules] = useState<AlertRule[]>([]);
     
     // Form state for new rule
@@ -63,28 +64,28 @@ export default function AlertsPage() {
 
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !firestore) return;
 
-        const rulesQuery = collection(db, 'users', userId, 'alertRules');
+        const rulesQuery = collection(firestore, 'users', userId, 'alertRules');
         const unsubscribe = onSnapshot(rulesQuery, (snapshot) => {
             const rulesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlertRule));
             setRules(rulesData);
         });
 
         return () => unsubscribe();
-    }, [userId]);
+    }, [userId, firestore]);
     
     const handleToggleRule = async (rule: AlertRule) => {
-        if (!userId) return;
-        const ruleRef = doc(db, 'users', userId, 'alertRules', rule.id);
+        if (!userId || !firestore) return;
+        const ruleRef = doc(firestore, 'users', userId, 'alertRules', rule.id);
         await updateDoc(ruleRef, { enabled: !rule.enabled });
     }
 
     const handleCreateRule = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!userId || !newRuleName || !newRuleCondition || !newRuleSeverity) return;
+        if (!userId || !newRuleName || !newRuleCondition || !newRuleSeverity || !firestore) return;
 
-        await addDoc(collection(db, 'users', userId, 'alertRules'), {
+        await addDoc(collection(firestore, 'users', userId, 'alertRules'), {
             name: newRuleName,
             condition: newRuleCondition,
             severity: newRuleSeverity,

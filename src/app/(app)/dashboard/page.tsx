@@ -37,7 +37,7 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, LabelList } from 'recharts';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import type { Alert, SystemStatus } from '@/lib/types';
 
 
@@ -69,15 +69,16 @@ function getStatusIndicator(status: string) {
 
 export default function DashboardPage() {
   const userId = useUserId();
+  const firestore = useFirestore();
   const [recentAlerts, setRecentAlerts] = useState<Alert[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus[]>(staticSystemStatus);
   const [eventsByType, setEventsByType] = useState(staticEvents);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !firestore) return;
 
     const alertsQuery = query(
-        collection(db, 'users', userId, 'alerts'),
+        collection(firestore, 'users', userId, 'alerts'),
         orderBy('timestamp', 'desc'),
         limit(5)
     );
@@ -88,7 +89,7 @@ export default function DashboardPage() {
     });
 
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, firestore]);
 
 
   return (
