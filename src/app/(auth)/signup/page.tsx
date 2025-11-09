@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,13 +33,14 @@ export default function SignupPage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
 
-    if (isUserLoading) {
-        return <div>Loading...</div>;
-    }
+    useEffect(() => {
+        if (!isUserLoading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, isUserLoading, router]);
 
-    if(user){
-        router.push('/dashboard');
-        return null;
+    if (isUserLoading || user) {
+        return <div>Loading...</div>;
     }
 
     const handleEmailSignup = (e: React.FormEvent) => {

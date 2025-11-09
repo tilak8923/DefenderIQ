@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -32,14 +32,14 @@ export default function LoginPage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
 
-
-    if (isUserLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if(user){
+    useEffect(() => {
+      if (!isUserLoading && user) {
         router.push('/dashboard');
-        return null;
+      }
+    }, [user, isUserLoading, router]);
+
+    if (isUserLoading || user) {
+        return <div>Loading...</div>;
     }
 
 
