@@ -19,19 +19,40 @@ const pythonScript = (userId: string | null, origin: string) => `
 import requests
 import time
 import os
+import platform
 
 # --- Configuration ---
 # Your unique User ID for the TSIEM application.
-# IMPORTANT: Replace "YOUR_USER_ID" with your actual ID.
+# This is automatically set for you when you are logged in.
 USER_ID = "${userId || 'YOUR_USER_ID'}" 
 
 # The URL of your TSIEM application's ingestion API.
-# This should be the URL where your app is deployed.
 API_ENDPOINT = "${origin}/api/ingest"
 
+def get_default_log_path():
+    """Returns a default log file path based on the operating system."""
+    system = platform.system()
+    if system == "Linux":
+        # Common log file for Debian/Ubuntu based systems.
+        # You might also use /var/log/auth.log or other specific logs.
+        print("Detected Linux OS. Defaulting to /var/log/syslog")
+        return "/var/log/syslog"
+    elif system == "Darwin": # macOS
+        print("Detected macOS. Defaulting to /var/log/system.log")
+        return "/var/log/system.log"
+    elif system == "Windows":
+        print("Detected Windows OS. NOTE: Windows uses Event Viewer, not flat log files by default.")
+        print("Please update LOG_FILE_PATH to your specific application's log file.")
+        # Example: "C:\\Program Files\\MyApplication\\logs\\app.log"
+        return "C:\\path\\to\\your\\application.log"
+    else:
+        print(f"Unrecognized OS: {system}. Please set LOG_FILE_PATH manually.")
+        return "/path/to/your/log/file.log"
+
 # The path to the log file you want to monitor.
-# Example for a Linux system: "/var/log/auth.log"
-LOG_FILE_PATH = "/path/to/your/log/file.log" 
+# The script attempts to set a reasonable default based on your OS.
+# !!! IMPORTANT !!! You may need to change this to the specific log file you want to monitor.
+LOG_FILE_PATH = get_default_log_path()
 
 # How often to check for new log entries (in seconds).
 POLL_INTERVAL = 10 
@@ -41,7 +62,7 @@ def send_logs(log_lines):
     if not log_lines:
         return
         
-    print(f"Sending {len(log_lines)} log entries to the SIEM...")
+    print(f"Sending {len(log_lines)} log entries for user {USER_ID}...")
     try:
         headers = {"Content-Type": "application/json"}
         payload = {
@@ -51,19 +72,18 @@ def send_logs(log_lines):
         response = requests.post(API_ENDPOINT, json=payload, headers=headers)
         
         if response.status_code == 200:
-            print("Successfully ingested logs.")
+            print(f"Successfully ingested {response.json().get('ingestedCount', 0)} logs.")
         else:
             print(f"Error: Failed to ingest logs. Status code: {response.status_code}")
             print(f"Response: {response.text}")
             
     except requests.exceptions.RequestException as e:
-        print(f"Error: Could not connect to the API endpoint. {e}")
+        print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}. {e}")
 
 
 def follow_log_file(file_path):
     """Monitors a log file for new lines."""
     print(f"Starting to monitor log file: {file_path}")
-    print(f"Sending data for User ID: {USER_ID}")
     
     try:
         with open(file_path, 'r') as file:
@@ -81,16 +101,25 @@ def follow_log_file(file_path):
                 
     except FileNotFoundError:
         print(f"Error: The log file was not found at: {file_path}")
-        print("Please update the LOG_FILE_PATH variable in the script.")
+        print("Please verify the LOG_FILE_PATH variable in the script is correct.")
+    except PermissionError:
+        print(f"Error: Permission denied to read the file: {file_path}")
+        print("Please run the script with sufficient privileges (e.g., using 'sudo').")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
 
 if __name__ == "__main__":
-    if USER_ID == "YOUR_USER_ID":
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!! CRITICAL: Please set your USER_ID in the script. !!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if not USER_ID or USER_ID == "YOUR_USER_ID":
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("!!! CRITICAL: Could not determine User ID. Please log in to the app and !!!")
+        print("!!!           copy the script again.                                   !!!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    elif "path/to/your" in LOG_FILE_PATH:
+         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+         print("!!! ACTION NEEDED: Please update the LOG_FILE_PATH variable in this    !!!")
+         print("!!!                  script to point to the correct log file.          !!!")
+         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     else:
         follow_log_file(LOG_FILE_PATH)
 `;
@@ -102,7 +131,9 @@ export default function CollectorsPage() {
 
     useEffect(() => {
         // This ensures the origin is only read on the client-side
-        setOrigin(window.location.origin);
+        if (typeof window !== 'undefined') {
+            setOrigin(window.location.origin);
+        }
     }, []);
 
     const fullScript = pythonScript(userId, origin);
@@ -136,8 +167,8 @@ export default function CollectorsPage() {
                         <ol className="list-decimal list-inside text-muted-foreground space-y-1 mt-2 text-sm">
                             <li>Save the code below as a Python file (e.g., `collector.py`) on the system you wish to monitor.</li>
                             <li>Make sure you have the `requests` library installed (`pip install requests`).</li>
-                            <li>Update the `LOG_FILE_PATH` variable in the script to point to the log file you want to collect.</li>
-                            <li>Run the script from your terminal: `python collector.py`.</li>
+                            <li>The script will try to find a default log file. If it's not correct, update the `LOG_FILE_PATH` variable in the script.</li>
+                            <li>Run the script from your terminal: `python collector.py`. You may need `sudo` for system logs (e.g. `sudo python collector.py`).</li>
                             <li>The script will now monitor the file and send new logs to your dashboard automatically.</li>
                         </ol>
                     </div>
