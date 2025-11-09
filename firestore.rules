@@ -1,0 +1,135 @@
+/**
+ * @fileoverview Firestore Security Rules for SentinelView.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model.  Each user can only
+ * access their own data, and no global admin roles are defined.
+ *
+ * Data Structure:
+ * All data is nested under `/users/{userId}`, including user profiles,
+ * log entries, alerts, and reports. This structure ensures that all
+ * data is explicitly associated with a specific user.
+ *
+ * Key Security Decisions:
+ * - Users can only create their own user document and can't modify `id` after creation.
+ * - Users can only access their own log entries, alerts, and reports.
+ * - Listing other users is prohibited.
+ *
+ * Denormalization for Authorization:
+ * The `userId` field is denormalized into the `LogEntry`, `Alert`, and
+ * `Report` documents to enable efficient authorization checks without
+ * requiring additional reads.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures the `/users/{userId}` collection, allowing users to manage their own profiles.
+     * @path /users/{userId}
+     * @allow (create) User 'user_abc' can create their own profile at /users/user_abc if authenticated as user_abc.
+     * @deny (create) User 'user_def' cannot create a profile for user_abc at /users/user_abc.
+     * @allow (get, update, delete) User 'user_abc' can read and modify their profile at /users/user_abc if authenticated as user_abc.
+     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's profile at /users/user_abc.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.  Also enforces immutability of the 'id' field.
+     */
+    match /users/{userId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the `/users/{userId}/log_entries/{logEntryId}` collection, allowing users to manage their own log entries.
+     * @path /users/{userId}/log_entries/{logEntryId}
+     * @allow (create) User 'user_abc' can create a log entry under /users/user_abc/log_entries/log_entry_1 if authenticated as user_abc and the log entry's userId is also user_abc.
+     * @deny (create) User 'user_def' cannot create a log entry under /users/user_abc/log_entries/log_entry_1.
+     * @allow (get, update, delete) User 'user_abc' can read and modify their own log entry at /users/user_abc/log_entries/log_entry_1.
+     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's log entry at /users/user_abc/log_entries/log_entry_1.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
+     */
+    match /users/{userId}/log_entries/{logEntryId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the `/users/{userId}/alerts/{alertId}` collection, allowing users to manage their own alerts.
+     * @path /users/{userId}/alerts/{alertId}
+     * @allow (create) User 'user_abc' can create an alert under /users/user_abc/alerts/alert_1 if authenticated as user_abc and the alert's userId is also user_abc.
+     * @deny (create) User 'user_def' cannot create an alert under /users/user_abc/alerts/alert_1.
+     * @allow (get, update, delete) User 'user_abc' can read and modify their own alert at /users/user_abc/alerts/alert_1.
+     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's alert at /users/user_abc/alerts/alert_1.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
+     */
+    match /users/{userId}/alerts/{alertId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the `/users/{userId}/reports/{reportId}` collection, allowing users to manage their own reports.
+     * @path /users/{userId}/reports/{reportId}
+     * @allow (create) User 'user_abc' can create a report under /users/user_abc/reports/report_1 if authenticated as user_abc and the report's userId is also user_abc.
+     * @deny (create) User 'user_def' cannot create a report under /users/user_abc/reports/report_1.
+     * @allow (get, update, delete) User 'user_abc' can read and modify their own report at /users/user_abc/reports/report_1.
+     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's report at /users/user_abc/reports/report_1.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
+     */
+    match /users/{userId}/reports/{reportId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
