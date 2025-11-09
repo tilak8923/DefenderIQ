@@ -5,3 +5,12 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+# This rewrite makes the /api/ingest endpoint public, allowing the
+# Python collector to send data from outside the cloud environment.
+rewrites:
+  - source: /api/ingest
+    run:
+      # The service ID of the App Hosting backend, which is always "run"
+      serviceId: run
+      # Pin the rewrite to a specific tag, which is the latest by default
+      tag: latest
