@@ -5,9 +5,12 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import type { LogEntry, AlertRule } from '@/lib/types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 // Define schemas for the flow
 const RunLogAnalysisInputSchema = z.object({
@@ -71,18 +74,37 @@ const runLogAnalysisFlow = ai.defineFlow(
   },
   async ({ userId }) => {
     const { firestore } = initializeFirebase();
+    
     // 1. Fetch all enabled alert rules from Firestore
     const rulesQuery = query(collection(firestore, 'users', userId, 'alertRules'), where("enabled", "==", true));
-    const rulesSnapshot = await getDocs(rulesQuery);
+    const rulesSnapshot = await getDocs(rulesQuery).catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: `users/${userId}/alertRules`,
+          operation: 'list',
+        })
+      );
+      throw error;
+    });
     const rules: AlertRule[] = rulesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlertRule));
     
-    // 2. Fetch all logs from Firestore that have not been analyzed
-    // In a real app, you'd add a flag 'analyzed: true' to logs and query for 'analyzed: false'
-    // For simplicity, we'll re-analyze all logs each time.
-    const logsSnapshot = await getDocs(collection(firestore, 'users', userId, 'logs'));
+    // 2. Fetch all logs from Firestore
+    const logsQuery = query(collection(firestore, 'users', userId, 'logs'));
+    const logsSnapshot = await getDocs(logsQuery).catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: `users/${userId}/logs`,
+          operation: 'list',
+        })
+      );
+      throw error;
+    });
     const logs: LogEntry[] = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
     
     let alertsCreated = 0;
+    const alertsCollection = collection(firestore, 'users', userId, 'alerts');
 
     // 3. For each log, evaluate it against each rule
     for (const log of logs) {
@@ -93,14 +115,15 @@ const runLogAnalysisFlow = ai.defineFlow(
         });
 
         if (output?.isMatch) {
-          // 4. If AI confirms a match, create a new alert in Firestore
-          await addDoc(collection(firestore, 'users', userId, 'alerts'), {
+          const newAlert = {
             severity: rule.severity,
             description: output.alertDescription || `Alert triggered by rule: ${rule.name}`,
             timestamp: new Date().toISOString(),
             status: 'Active',
             userId: userId,
-          });
+          };
+          // 4. If AI confirms a match, create a new alert using non-blocking function
+          addDocumentNonBlocking(alertsCollection, newAlert);
           alertsCreated++;
         }
       }
