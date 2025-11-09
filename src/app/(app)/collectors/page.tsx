@@ -50,7 +50,7 @@ export default function CollectorsPage() {
                 <CardHeader>
                     <CardTitle>Python Collector Agent</CardTitle>
                     <CardDescription>
-                        This script monitors a log file on your system and forwards new entries to the ingestion API.
+                        This script monitors a log file on your system and forwards new entries to the ingestion API. This feature is deprecated in favor of manual ingestion.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
