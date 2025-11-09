@@ -24,7 +24,8 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { useAuth, signOutUser } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { signOutUser } from '@/firebase/non-blocking-login';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
