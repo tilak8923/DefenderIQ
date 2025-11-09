@@ -23,7 +23,6 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/firebase';
 import { signOutUser } from '@/firebase/non-blocking-login';
 
