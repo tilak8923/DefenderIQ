@@ -18,11 +18,10 @@ import {
   initiateEmailSignIn,
   signInWithGoogle,
   signInWithGitHub,
-  auth,
 } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 
 
 export default function LoginPage() {
@@ -31,6 +30,7 @@ export default function LoginPage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, isUserLoading } = useUser();
+    const auth = useAuth();
 
 
     if (isUserLoading) {
