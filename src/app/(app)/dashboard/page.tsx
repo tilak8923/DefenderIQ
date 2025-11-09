@@ -86,6 +86,8 @@ export default function DashboardPage() {
     const unsubscribe = onSnapshot(alertsQuery, (snapshot) => {
         const alertsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Alert));
         setRecentAlerts(alertsData);
+    }, (error) => {
+        console.error("Error fetching alerts:", error);
     });
 
     return () => unsubscribe();
@@ -124,7 +126,7 @@ export default function DashboardPage() {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats.alertsTriggered}</div>
+            <div className="text-2xl font-bold">{recentAlerts.length > 0 ? recentAlerts.length : dashboardStats.alertsTriggered}</div>
             <p className="text-xs text-muted-foreground">in the last 24h</p>
           </CardContent>
         </Card>

@@ -70,6 +70,8 @@ export default function AlertsPage() {
         const unsubscribe = onSnapshot(rulesQuery, (snapshot) => {
             const rulesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlertRule));
             setRules(rulesData);
+        }, (error) => {
+            console.error("Error fetching alert rules:", error);
         });
 
         return () => unsubscribe();

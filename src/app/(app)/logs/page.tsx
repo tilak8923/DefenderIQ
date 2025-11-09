@@ -54,6 +54,8 @@ export default function LogsPage() {
     const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
         const logsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
         setAllLogEntries(logsData);
+    }, (error) => {
+        console.error("Error fetching logs:", error);
     });
 
     return () => unsubscribe();
@@ -105,7 +107,7 @@ export default function LogsPage() {
             <TableBody>
               {filteredLogs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="text-muted-foreground">{log.timestamp}</TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant={getSeverityBadgeVariant(log.severity)}
                       className={cn(log.severity === 'WARN' && 'bg-warning text-black')}
