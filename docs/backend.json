@@ -31,9 +31,7 @@
       },
       "required": [
         "id",
-        "username",
-        "email",
-        "registrationDate"
+        "email"
       ]
     },
     "LogEntry": {
@@ -157,7 +155,7 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {

@@ -1,71 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, collection, writeBatch } from 'firebase/firestore';
-import { defaultAlertRules, sampleLogEntries, recentAlerts } from '@/lib/data';
+import { useUser } from '@/firebase';
 
-const USER_ID_KEY = 'tsiem-user-id';
-const USER_INITIALIZED_KEY = 'tsiem-user-initialized';
-
-async function seedInitialData(userId: string) {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists() && localStorage.getItem(USER_INITIALIZED_KEY) === userId) {
-        return; // User already exists and has been initialized
-    }
-    
-    const batch = writeBatch(db);
-
-    // Set a marker doc to indicate user exists
-    if (!userDoc.exists()) {
-       batch.set(userDocRef, { createdAt: new Date().toISOString() });
-    }
-
-    // Add default alert rules
-    const rulesCollection = collection(db, 'users', userId, 'alertRules');
-    defaultAlertRules.forEach(rule => {
-        const newRuleRef = doc(rulesCollection);
-        batch.set(newRuleRef, rule);
-    });
-
-    // Add sample logs
-    const logsCollection = collection(db, 'users', userId, 'logs');
-    sampleLogEntries.forEach(log => {
-        const newLogRef = doc(logsCollection);
-        batch.set(newLogRef, log);
-    });
-
-    // Add initial alerts
-    const alertsCollection = collection(db, 'users', userId, 'alerts');
-    recentAlerts.forEach(alert => {
-        const newAlertRef = doc(alertsCollection);
-        batch.set(newAlertRef, alert);
-    });
-    
-    await batch.commit();
-    localStorage.setItem(USER_INITIALIZED_KEY, userId);
-}
-
-
+/**
+ * A hook that returns the UID of the currently authenticated Firebase user.
+ * It replaces the previous local storage-based ID system.
+ * @returns The user's UID, or null if the user is not authenticated or loading.
+ */
 export function useUserId() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, isUserLoading } = useUser();
 
-  useEffect(() => {
-    // This code runs only on the client
-    let storedUserId = localStorage.getItem(USER_ID_KEY);
-    if (!storedUserId) {
-      storedUserId = uuidv4();
-      localStorage.setItem(USER_ID_KEY, storedUserId);
-    }
-    setUserId(storedUserId);
-
-    // Seed data if the user is new
-    seedInitialData(storedUserId).catch(console.error);
-
-  }, []);
-
-  return userId;
+  if (isUserLoading) {
+    return null; // Return null while authentication state is being determined
+  }
+  
+  return user ? user.uid : null;
 }

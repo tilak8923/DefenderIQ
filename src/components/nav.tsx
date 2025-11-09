@@ -14,14 +14,17 @@ import {
   Zap,
   Upload,
   Plug,
+  LogOut,
 } from 'lucide-react';
 
 import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+import { useAuth, signOutUser } from '@/firebase';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,33 +40,50 @@ const navItems = [
 
 export function MainNav() {
   const pathname = usePathname();
+  const auth = useAuth();
 
   return (
-    <nav className="flex flex-col gap-4 p-2">
-       <div className="flex items-center gap-2 p-2">
-        <Shield className="h-8 w-8 text-primary" />
-        <h1 className="text-xl font-bold tracking-widest">TSIEM</h1>
-      </div>
-      <SidebarMenu>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={item.label}
-                className="justify-start"
-              >
-                <Link href={item.href}>
-                  <Icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </nav>
+    <>
+      <nav className="flex flex-col gap-4 p-2">
+        <div className="flex items-center gap-2 p-2">
+          <Shield className="h-8 w-8 text-primary" />
+          <h1 className="text-xl font-bold tracking-widest">TSIEM</h1>
+        </div>
+        <SidebarMenu>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                  tooltip={item.label}
+                  className="justify-start"
+                >
+                  <Link href={item.href}>
+                    <Icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </nav>
+      <SidebarFooter className="mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => signOutUser(auth)}
+              className="justify-start"
+              tooltip="Logout"
+            >
+              <LogOut />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </>
   );
 }
