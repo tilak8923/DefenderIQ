@@ -13,7 +13,7 @@ USER_ID = "${userId || 'YOUR_USER_ID'}"
 
 # The secret API key for the ingestion endpoint.
 # This is pre-filled for you. Keep it safe.
-API_KEY = "a-super-secret-and-unique-key-for-ingestion"
+API_KEY = "${process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY || 'a-super-secret-and-unique-key-for-ingestion'}"
 
 # The URL of your TSIEM application's ingestion API.
 API_ENDPOINT = "${origin}/api/ingest"
@@ -25,9 +25,12 @@ def get_default_log_path():
         # Common log file for Debian/Ubuntu based systems.
         # You might also use /var/log/auth.log or other specific logs.
         print("Detected Linux OS. Defaulting to /var/log/syslog")
+        print("NOTE: You may need to run this script with 'sudo' to access system logs.")
         return "/var/log/syslog"
     elif system == "Darwin": # macOS
         print("Detected macOS. Defaulting to /var/log/system.log")
+        print("!!! MACOS NOTICE: Modern macOS versions do not actively use /var/log/system.log. !!!")
+        print("!!! To test, it is recommended to change LOG_FILE_PATH to a file you can write to, e.g., '/tmp/test.log' !!!")
         return "/var/log/system.log"
     elif system == "Windows":
         print("Detected Windows OS. NOTE: Windows uses Event Viewer, not flat log files by default.")
@@ -51,7 +54,7 @@ def send_logs(log_lines):
     if not log_lines:
         return
         
-    print(f"Sending {len(log_lines)} log entries for user {USER_ID}...")
+    print(f"Sending {len(log_lines)} new log entries for user {USER_ID}...")
     try:
         headers = {
             "Content-Type": "application/json",
@@ -88,7 +91,9 @@ def follow_log_file(file_path):
                     # Strip whitespace and filter out empty lines
                     cleaned_lines = [line.strip() for line in new_lines if line.strip()]
                     send_logs(cleaned_lines)
-                
+                else:
+                    print(f"Waiting for new log entries... (checking every {POLL_INTERVAL} seconds)")
+
                 time.sleep(POLL_INTERVAL)
                 
     except FileNotFoundError:
