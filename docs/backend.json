@@ -155,7 +155,8 @@
   "auth": {
     "providers": [
       "password",
-      "google.com"
+      "google.com",
+      "github.com"
     ]
   },
   "firestore": {

@@ -12,9 +12,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Chrome } from 'lucide-react';
+import { Chrome, Github } from 'lucide-react';
 import Link from 'next/link';
-import { initiateEmailSignIn, signInWithGoogle, auth } from '@/firebase/non-blocking-login';
+import {
+  initiateEmailSignIn,
+  signInWithGoogle,
+  signInWithGitHub,
+  auth,
+} from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
@@ -61,6 +66,16 @@ export default function LoginPage() {
             })
     }
 
+    const handleGitHubLogin = () => {
+      signInWithGitHub(auth).catch((error) => {
+        toast({
+          variant: 'destructive',
+          title: 'GitHub Sign-In Failed',
+          description: error.message,
+        });
+      });
+    };
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
         <Card className="w-full max-w-md">
@@ -105,10 +120,16 @@ export default function LoginPage() {
                     </span>
                 </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
-                <Chrome className="mr-2 h-4 w-4" />
-                Google
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={handleGoogleLogin}>
+                  <Chrome className="mr-2 h-4 w-4" />
+                  Google
+              </Button>
+              <Button variant="outline" onClick={handleGitHubLogin}>
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub
+              </Button>
+            </div>
             </CardContent>
             <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">

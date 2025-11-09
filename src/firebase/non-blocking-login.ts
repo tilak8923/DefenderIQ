@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
@@ -70,6 +71,31 @@ export async function signInWithGoogle(auth: Auth) {
     }
   } catch (error) {
     console.error('Error during Google sign-in:', error);
+    throw error;
+  }
+}
+
+/** Signs in the user with GitHub using a popup. */
+export async function signInWithGitHub(auth: Auth) {
+  const { firestore } = initializeFirebase();
+  const provider = new GithubAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const userRef = doc(firestore, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      await setDoc(userRef, {
+        id: user.uid,
+        username: user.displayName,
+        email: user.email,
+        registrationDate: new Date().toISOString(),
+      });
+      await seedInitialData(user.uid);
+    }
+  } catch (error) {
+    console.error('Error during GitHub sign-in:', error);
     throw error;
   }
 }
