@@ -1,4 +1,5 @@
 
+
 export const getPythonCollectorScript = (userId: string | null, origin: string) => `
 import requests
 import time
@@ -9,6 +10,10 @@ import platform
 # Your unique User ID for the TSIEM application.
 # This is automatically set for you when you are logged in.
 USER_ID = "${userId || 'YOUR_USER_ID'}" 
+
+# The secret API key for the ingestion endpoint.
+# This is pre-filled for you. Keep it safe.
+API_KEY = "a-super-secret-and-unique-key-for-ingestion"
 
 # The URL of your TSIEM application's ingestion API.
 API_ENDPOINT = "${origin}/api/ingest"
@@ -48,7 +53,10 @@ def send_logs(log_lines):
         
     print(f"Sending {len(log_lines)} log entries for user {USER_ID}...")
     try:
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
         payload = {
             "userId": USER_ID,
             "logs": "\\n".join(log_lines)
@@ -98,6 +106,10 @@ if __name__ == "__main__":
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print("!!! CRITICAL: Could not determine User ID. Please log in to the app and !!!")
         print("!!!           copy the script again.                                   !!!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    elif not API_KEY or API_KEY == "YOUR_API_KEY":
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("!!! CRITICAL: API Key not found. Check your .env file in the project.  !!!")
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     elif "path/to/your" in LOG_FILE_PATH:
          print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

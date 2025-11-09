@@ -20,12 +20,17 @@ export default function CollectorsPage() {
     const userId = useUserId();
     const { toast } = useToast();
     const [origin, setOrigin] = useState('');
+    const [apiKey, setApiKey] = useState('YOUR_API_KEY'); // Default/loading state
 
     useEffect(() => {
         // This ensures the origin is only read on the client-side
         if (typeof window !== 'undefined') {
             setOrigin(window.location.origin);
         }
+        // In a real app, you might fetch this key, but here we'll just use a placeholder
+        // that will be filled by getPythonCollectorScript. The actual key is in .env.
+        setApiKey(process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY || 'a-super-secret-and-unique-key-for-ingestion');
+
     }, []);
 
     const fullScript = getPythonCollectorScript(userId, origin);
@@ -50,7 +55,7 @@ export default function CollectorsPage() {
                 <CardHeader>
                     <CardTitle>Python Collector Agent</CardTitle>
                     <CardDescription>
-                        This script monitors a log file on your system and forwards new entries to the ingestion API. This feature is deprecated in favor of manual ingestion.
+                        This script monitors a log file on your system and forwards new entries to the ingestion API.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

@@ -15,9 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUserId } from '@/hooks/use-user-id';
+import { Loader2, Upload } from 'lucide-react';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { Loader2, Upload } from 'lucide-react';
 import { parseLogEntries } from '@/ai/flows/parse-log-entries';
 
 
@@ -48,19 +48,21 @@ export default function IngestionPage() {
 
     setRunning(true);
     try {
+      // Step 1: Use the AI flow to parse the raw log text client-side
       const { parsedLogs } = await parseLogEntries({ logText: logInput });
       
       if (!parsedLogs || parsedLogs.length === 0) {
         throw new Error("AI could not parse any valid log entries from the provided text.");
       }
 
-      // Use a batch write for efficiency
+      // Step 2: Write the parsed logs to Firestore from the client
       const batch = writeBatch(firestore);
       const logsCollection = collection(firestore, 'users', userId, 'logs');
       
       parsedLogs.forEach(log => {
         const docRef = doc(logsCollection); // Create a new document reference with a unique ID
-        batch.set(docRef, log);
+        const logWithUser = { ...log, userId }; // Ensure userId is in the log data for rule validation
+        batch.set(docRef, logWithUser);
       });
       
       await batch.commit();
@@ -75,7 +77,7 @@ export default function IngestionPage() {
       toast({
         variant: 'destructive',
         title: 'Import Failed',
-        description: error.message || 'The AI failed to parse the logs. Please check the format.',
+        description: error.message || 'An error occurred during the import process.',
       });
     } finally {
       setRunning(false);
@@ -87,14 +89,14 @@ export default function IngestionPage() {
       <header>
         <h1 className="text-2xl font-bold tracking-wider">Log Ingestion</h1>
         <p className="text-muted-foreground">
-          Manually import log files by pasting plain text content.
+          Manually import log files by pasting plain text content. This is useful for testing or one-off imports.
         </p>
       </header>
       <Card>
         <CardHeader>
-          <CardTitle>Import Logs</CardTitle>
+          <CardTitle>Manual Log Import</CardTitle>
           <CardDescription>
-            Paste log entries from your files or scripts. The AI will parse them into a structured format.
+            Paste log entries from your files. The AI will parse them into a structured format before saving them to your database.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -108,7 +110,7 @@ export default function IngestionPage() {
                 onChange={(e) => setLogInput(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-                Each line should be a separate log entry. The AI will attempt to extract the timestamp, severity, and message.
+                Each line should be a separate log entry.
             </p>
         </CardContent>
         <CardFooter>
