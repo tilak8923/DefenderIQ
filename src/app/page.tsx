@@ -19,5 +19,5 @@ export default function Home() {
   }, [user, isUserLoading, router]);
 
   // You can optionally show a loading spinner here
-  return null;
+  return <div>Loading...</div>;
 }
