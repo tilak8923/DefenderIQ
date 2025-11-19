@@ -30,17 +30,18 @@ const geolocateIpTool = ai.defineTool(
     }
     
     try {
-      const response = await fetch(`https://ip-api.com/json/${ipAddress}`);
+      // Switched to a more reliable, free geolocation service
+      const response = await fetch(`https://ipwho.is/${ipAddress}`);
       if (!response.ok) {
         throw new Error(`API call failed with status: ${response.status}`);
       }
       const data = await response.json();
-      if (data.status === 'fail') {
+      if (!data.success) {
         throw new Error(`Geolocation failed: ${data.message}`);
       }
       return {
-        lat: data.lat,
-        lon: data.lon,
+        lat: data.latitude,
+        lon: data.longitude,
         city: data.city,
         country: data.country,
       };
