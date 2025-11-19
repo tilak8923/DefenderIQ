@@ -28,10 +28,17 @@ def get_default_log_path():
         print("NOTE: You may need to run this script with 'sudo' to access system logs.")
         return "/var/log/syslog"
     elif system == "Darwin": # macOS
-        print("Detected macOS. Defaulting to /var/log/system.log")
-        print("!!! MACOS NOTICE: Modern macOS versions do not actively use /var/log/system.log. !!!")
-        print("!!! To test, it is recommended to change LOG_FILE_PATH to a file you can write to, e.g., '/tmp/test.log' !!!")
-        return "/var/log/system.log"
+        test_log_path = "/tmp/tsiem-test.log"
+        print("---")
+        print("macOS DETECTED: Special instructions for testing:")
+        print(f"Modern macOS does not use simple text files for system logs. For demonstration, this script will monitor a test file at: {test_log_path}")
+        print("To simulate log entries, open a NEW, SEPARATE terminal and run the following command:")
+        print(f'  echo "($(date)) - Sample macOS log entry" >> {test_log_path}')
+        print("---")
+        # Create the file if it doesn't exist to prevent immediate FileNotFoundError
+        if not os.path.exists(test_log_path):
+            open(test_log_path, 'a').close()
+        return test_log_path
     elif system == "Windows":
         print("Detected Windows OS. NOTE: Windows uses Event Viewer, not flat log files by default.")
         print("Please update LOG_FILE_PATH to your specific application's log file.")
@@ -43,11 +50,10 @@ def get_default_log_path():
 
 # The path to the log file you want to monitor.
 # The script attempts to set a reasonable default based on your OS.
-# !!! IMPORTANT !!! You may need to change this to the specific log file you want to monitor.
 LOG_FILE_PATH = get_default_log_path()
 
 # How often to check for new log entries (in seconds).
-POLL_INTERVAL = 10 
+POLL_INTERVAL = 5 
 
 def send_logs(log_lines):
     """Sends a batch of log lines to the ingestion API."""
