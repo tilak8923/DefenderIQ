@@ -5,8 +5,6 @@
 # The NEXT_PUBLIC_LOG_INGESTION_API_KEY is used by the Python collector to securely
 # send log data to the /api/ingest endpoint. It is prefixed with NEXT_PUBLIC_
 # to make it available to the browser environment so it can be embedded in the script.
-environmentVariables:
-  NEXT_PUBLIC_LOG_INGESTION_API_KEY: a-super-secret-and-unique-key-for-ingestion
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.

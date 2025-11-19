@@ -1,5 +1,6 @@
 
 
+
 export const getPythonCollectorScript = (userId: string | null, origin: string) => `
 import requests
 import time
@@ -15,7 +16,7 @@ USER_ID = "${userId || 'YOUR_USER_ID'}"
 
 # The secret API key for the ingestion endpoint.
 # This is pre-filled for you. Keep it safe.
-API_KEY = "${process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY || 'a-super-secret-and-unique-key-for-ingestion'}"
+API_KEY = "a-super-secret-and-unique-key-for-ingestion"
 
 # The URL of your TSIEM application's ingestion API.
 API_ENDPOINT = "${origin}/api/ingest"
@@ -144,4 +145,4 @@ if __name__ == "__main__":
             main()
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-`;
+`

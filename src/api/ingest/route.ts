@@ -4,10 +4,12 @@ import { parseLogEntries } from '@/ai/flows/parse-log-entries';
 import { initializeFirebase } from '@/firebase';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 
+const INGESTION_API_KEY = "a-super-secret-and-unique-key-for-ingestion";
+
 export async function POST(request: Request) {
   // 1. Authenticate the request with the secret API key
   const apiKey = request.headers.get('Authorization')?.split(' ')[1];
-  if (apiKey !== process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY) {
+  if (apiKey !== INGESTION_API_KEY) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
@@ -33,9 +35,6 @@ export async function POST(request: Request) {
 
     // 3. Write the parsed logs to Firestore under the user's ID
     const batch = writeBatch(firestore);
-    // Security Rule Note: This part requires server-side authentication (e.g. via Admin SDK)
-    // to bypass user-based security rules. For this implementation, we assume the environment
-    // is set up to allow this server-to-server interaction. The API key provides the first layer of security.
     const logsCollection = collection(firestore, 'users', userId, 'logs');
     
     parsedLogs.forEach(log => {
