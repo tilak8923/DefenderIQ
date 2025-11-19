@@ -14,7 +14,6 @@ const navItems = [
   { href: '/alerts', label: 'Alerts' },
   { href: '/reports', label: 'Reports' },
   { href: '/threat-intelligence', label: 'Threat Intel' },
-  { href: '/threat-map', label: 'Threat Map' },
   { href: '/analysis', label: 'Analysis' },
   { href: '/collectors', label: 'Collectors' },
   { href: '/terminal', label: 'Terminal' },
