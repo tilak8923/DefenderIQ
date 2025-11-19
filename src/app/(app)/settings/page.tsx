@@ -75,4 +75,11 @@ export default function SettingsPage() {
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="uid">User ID</Label>
-                        <Input id="uid" defaultValue={user.uid} disabled
+                        <Input id="uid" defaultValue={user.uid} disabled />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    </div>
+  );
+}
