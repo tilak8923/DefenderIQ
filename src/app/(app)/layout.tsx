@@ -1,11 +1,6 @@
 'use client';
 
 import { MainNav } from '@/components/nav';
-import {
-  Sidebar,
-  SidebarProvider,
-  SidebarInset,
-} from '@/components/ui/sidebar';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -33,13 +28,9 @@ export default function AppLayout({
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <MainNav />
-      </Sidebar>
-      <SidebarInset>
-        <main className="p-4 lg:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex flex-col min-h-screen">
+      <MainNav />
+      <main className="flex-grow p-4 lg:p-6">{children}</main>
+    </div>
   );
 }
