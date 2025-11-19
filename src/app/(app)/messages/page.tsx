@@ -32,18 +32,20 @@ export default function MessagesPage() {
     const usersQuery = useMemoFirebase(() =>
         firestore ? query(collection(firestore, 'users')) : null,
     [firestore]);
-    const { data: allUsers } = useCollection<UserProfile>(usersQuery);
+    const { data: allUsersData } = useCollection<UserProfile>(usersQuery);
+    const allUsers = useMemo(() => allUsersData || [], [allUsersData]);
+
 
     // Fetch conversations the current user is part of
     const conversationsQuery = useMemoFirebase(() =>
-        currentUser ? query(collection(firestore, 'conversations'), where('participants', 'array-contains', currentUser.uid)) : null,
+        currentUser && firestore ? query(collection(firestore, 'conversations'), where('participants', 'array-contains', currentUser.uid)) : null,
     [currentUser, firestore]);
     const { data: userConversations } = useCollection<Omit<Conversation, 'id' | 'participantDetails'>>(conversationsQuery);
 
     // Fetch messages for the active conversation
     const messagesQuery = useMemoFirebase(() =>
-        activeConversation ? query(collection(firestore, 'conversations', activeConversation.id, 'messages'), orderBy('timestamp', 'asc')) : null,
-    [activeConversation]);
+        activeConversation && firestore ? query(collection(firestore, 'conversations', activeConversation.id, 'messages'), orderBy('timestamp', 'asc')) : null,
+    [activeConversation, firestore]);
     const { data: messages } = useCollection<Message>(messagesQuery);
     
     // --- Memos & Effects ---
@@ -89,7 +91,7 @@ export default function MessagesPage() {
         });
         
         const newConvoDoc = await getDoc(newConversationRef);
-        const newConvoData = { id: newConvoDoc.id, ...newConvoDoc.data() } as Conversation;
+        const newConvoData = { id: newConvoDoc.id, ...newConvoDoc.data(), participantDetails: [currentUser, otherUser] } as Conversation;
 
         setActiveConversation(newConvoData);
         setShowUserList(false);
