@@ -6,6 +6,7 @@ import time
 import os
 import platform
 import subprocess
+from pathlib import Path
 
 # --- Configuration ---
 # Your unique User ID for the TSIEM application.
@@ -51,9 +52,11 @@ def send_logs(log_lines):
         print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}. {e}")
 
 def follow_log_file(file_path):
-    """Monitors a traditional log file for new lines (for Linux)."""
+    """Monitors a traditional log file for new lines (for Linux/Windows or macOS test)."""
     print(f"Starting to monitor log file: {file_path}")
     try:
+        # Ensure the file exists before trying to open it
+        Path(file_path).touch()
         with open(file_path, 'r') as file:
             file.seek(0, os.SEEK_END)
             while True:
@@ -66,6 +69,7 @@ def follow_log_file(file_path):
         print(f"Error: The log file was not found at: {file_path}")
     except PermissionError:
         print(f"Error: Permission denied for {file_path}. Please run with 'sudo'.")
+
 
 def stream_macos_logs():
     """Streams logs directly from macOS's Unified Logging System."""
@@ -133,7 +137,7 @@ def main():
 if __name__ == "__main__":
     if not USER_ID or USER_ID == "YOUR_USER_ID":
         print("CRITICAL: User ID not found. Please log in and copy the script again.")
-    elif not API_KEY or API_KEY == "YOUR_API_KEY":
+    elif not API_KEY or API_KEY == "a-super-secret-and-unique-key-for-ingestion":
         print("CRITICAL: API Key not found. This is a configuration issue.")
     else:
         try:

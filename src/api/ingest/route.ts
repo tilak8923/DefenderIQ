@@ -7,7 +7,7 @@ import { collection, writeBatch, doc } from 'firebase/firestore';
 export async function POST(request: Request) {
   // 1. Authenticate the request with the secret API key
   const apiKey = request.headers.get('Authorization')?.split(' ')[1];
-  if (apiKey !== process.env.LOG_INGESTION_API_KEY) {
+  if (apiKey !== process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
