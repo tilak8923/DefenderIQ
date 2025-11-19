@@ -26,3 +26,25 @@ export type SystemStatus = {
   name: string;
   status: 'Operational' | 'Degraded' | 'Offline';
 };
+
+export type UserProfile = {
+    id: string;
+    username?: string;
+    email?: string;
+    photoURL?: string;
+};
+
+export type Conversation = {
+    id: string;
+    participants: string[];
+    participantDetails: UserProfile[];
+    lastMessage?: string;
+    lastMessageTimestamp?: string;
+};
+
+export type Message = {
+    id: string;
+    senderId: string;
+    text: string;
+    timestamp: string;
+};

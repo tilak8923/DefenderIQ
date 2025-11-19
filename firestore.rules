@@ -13,7 +13,7 @@
  * Key Security Decisions:
  * - Users can only create their own user document and can't modify `id` after creation.
  * - Users can only access their own log entries, alerts, and reports.
- * - Listing other users is prohibited.
+ * - Listing other users is allowed for the chat feature, but their subcollections are protected.
  *
  * Denormalization for Authorization:
  * The `userId` field is denormalized into the `LogEntry`, `Alert`, and
@@ -24,112 +24,83 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
     /**
      * @description Secures the `/users/{userId}` collection, allowing users to manage their own profiles.
      * @path /users/{userId}
-     * @allow (create) User 'user_abc' can create their own profile at /users/user_abc if authenticated as user_abc.
-     * @deny (create) User 'user_def' cannot create a profile for user_abc at /users/user_abc.
-     * @allow (get, update, delete) User 'user_abc' can read and modify their profile at /users/user_abc if authenticated as user_abc.
-     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's profile at /users/user_abc.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.  Also enforces immutability of the 'id' field.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn(); // Allow listing users for chat functionality
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Secures the `/users/{userId}/log_entries/{logEntryId}` collection, allowing users to manage their own log entries.
+     * @description Secures the `/users/{userId}/log_entries/{logEntryId}` collection.
      * @path /users/{userId}/log_entries/{logEntryId}
-     * @allow (create) User 'user_abc' can create a log entry under /users/user_abc/log_entries/log_entry_1 if authenticated as user_abc and the log entry's userId is also user_abc.
-     * @deny (create) User 'user_def' cannot create a log entry under /users/user_abc/log_entries/log_entry_1.
-     * @allow (get, update, delete) User 'user_abc' can read and modify their own log entry at /users/user_abc/log_entries/log_entry_1.
-     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's log entry at /users/user_abc/log_entries/log_entry_1.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
      */
     match /users/{userId}/log_entries/{logEntryId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow get, list, create, update, delete: if isOwner(userId);
     }
 
     /**
-     * @description Secures the `/users/{userId}/alerts/{alertId}` collection, allowing users to manage their own alerts.
+     * @description Secures the `/users/{userId}/alerts/{alertId}` collection.
      * @path /users/{userId}/alerts/{alertId}
-     * @allow (create) User 'user_abc' can create an alert under /users/user_abc/alerts/alert_1 if authenticated as user_abc and the alert's userId is also user_abc.
-     * @deny (create) User 'user_def' cannot create an alert under /users/user_abc/alerts/alert_1.
-     * @allow (get, update, delete) User 'user_abc' can read and modify their own alert at /users/user_abc/alerts/alert_1.
-     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's alert at /users/user_abc/alerts/alert_1.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
      */
     match /users/{userId}/alerts/{alertId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow get, list, create, update, delete: if isOwner(userId);
     }
 
     /**
-     * @description Secures the `/users/{userId}/reports/{reportId}` collection, allowing users to manage their own reports.
+     * @description Secures the `/users/{userId}/reports/{reportId}` collection.
      * @path /users/{userId}/reports/{reportId}
-     * @allow (create) User 'user_abc' can create a report under /users/user_abc/reports/report_1 if authenticated as user_abc and the report's userId is also user_abc.
-     * @deny (create) User 'user_def' cannot create a report under /users/user_abc/reports/report_1.
-     * @allow (get, update, delete) User 'user_abc' can read and modify their own report at /users/user_abc/reports/report_1.
-     * @deny (get, update, delete) User 'user_def' cannot read or modify user_abc's report at /users/user_abc/reports/report_1.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data. Validates relational integrity.
      */
     match /users/{userId}/reports/{reportId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
+      allow get, list, create, update, delete: if isOwner(userId);
+    }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+    /**
+     * @description Secures the `/conversations/{conversationId}` collection.
+     * @path /conversations/{conversationId}
+     */
+    match /conversations/{conversationId} {
+       function isParticipant() {
+         return isSignedIn() && request.auth.uid in resource.data.participants;
+       }
+
+       allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
+       allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
+       allow update: if isParticipant(); // Allow participants to update (e.g., last message)
+    }
+
+     /**
+     * @description Secures the messages subcollection within a conversation.
+     * @path /conversations/{conversationId}/messages/{messageId}
+     */
+    match /conversations/{conversationId}/messages/{messageId} {
+        function isParticipant() {
+            // Check the parent conversation document to see if the user is a participant.
+            return isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        }
+        
+        // Allow participants to read all messages in the conversation.
+        allow get, list: if isParticipant();
+
+        // Allow a participant to create a message, but only if they are the sender.
+        allow create: if isParticipant() && request.resource.data.senderId == request.auth.uid;
     }
   }
 }
