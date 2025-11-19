@@ -1,19 +1,16 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
-# A list of environment variables that are available to your application.
-# The NEXT_PUBLIC_LOG_INGESTION_API_KEY is used by the Python collector to securely
-# send log data to the /api/ingest endpoint. It is prefixed with NEXT_PUBLIC_
-# to make it available to the browser environment so it can be embedded in the script.
+# The runConfig specifies the resources to provision for the App Hosting backend.
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
+  # The maximum number of container instances that can be running for your backend.
+  # If you want to handle more traffic, you can increase this value.
   maxInstances: 1
+
+# The rewrites property specifies how to handle incoming requests.
 # This rewrite makes the /api/ingest endpoint public, allowing the
 # Python collector to send data from outside the cloud environment.
+# The endpoint is still secured by the hardcoded API key in the script and the API route.
 rewrites:
   - source: /api/ingest
-    destination: /api/ingest
-    # This makes the endpoint publicly available.
-    # The endpoint is still secured by the NEXT_PUBLIC_LOG_INGESTION_API_KEY.
     public: true
