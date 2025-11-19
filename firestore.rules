@@ -81,9 +81,14 @@ service cloud.firestore {
          return isSignedIn() && request.auth.uid in resource.data.participants;
        }
 
-       allow get, list: if isSignedIn() && request.auth.uid in resource.data.participants;
+       // Allow get/update if the user is a participant in the specific conversation document
+       allow get, update: if isParticipant();
+       
+       // Allow list only if the query explicitly filters for the user's UID in the 'participants' array.
+       allow list: if isSignedIn() && request.query.where.get('participants', ['array-contains', '']) == request.auth.uid;
+
+       // Allow create if the user is including themselves in the participants list.
        allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
-       allow update: if isParticipant(); // Allow participants to update (e.g., last message)
     }
 
      /**
