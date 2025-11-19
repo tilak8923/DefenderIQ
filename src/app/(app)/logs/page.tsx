@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,12 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Search, Server, Rss } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { LogEntry } from '@/lib/types';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 
 const severities = ['ALL', 'CRITICAL', 'WARN', 'INFO', 'DEBUG'];
@@ -45,17 +48,21 @@ export default function LogsPage() {
   const [allLogEntries, setAllLogEntries] = useState<LogEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!userId || !firestore) return;
     
+    setLoading(true);
     const logsQuery = query(collection(firestore, 'users', userId, 'logs'));
     
     const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
         const logsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
-        setAllLogEntries(logsData);
+        setAllLogEntries(logsData.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+        setLoading(false);
     }, (error) => {
         console.error("Error fetching logs:", error);
+        setLoading(false);
     });
 
     return () => unsubscribe();
@@ -67,6 +74,24 @@ export default function LogsPage() {
     const matchesSeverity = severityFilter === 'ALL' || log.severity === severityFilter;
     return matchesSearch && matchesSeverity;
   });
+  
+  const renderEmptyState = () => (
+    <div className="text-center py-16">
+        <Rss className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">Waiting for Log Data</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+            No log entries have been received yet. Once you set up a collector, your logs will appear here in real-time.
+        </p>
+        <div className="mt-6">
+            <Button asChild>
+                <Link href="/collectors">
+                    <Server className="mr-2 h-4 w-4" />
+                    Set Up a Collector
+                </Link>
+            </Button>
+        </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -105,7 +130,19 @@ export default function LogsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLogs.map((log) => (
+              {loading && (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">Loading logs...</TableCell>
+                </TableRow>
+              )}
+              {!loading && filteredLogs.length === 0 && (
+                 <TableRow>
+                    <TableCell colSpan={4}>
+                        {renderEmptyState()}
+                    </TableCell>
+                </TableRow>
+              )}
+              {!loading && filteredLogs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
                   <TableCell>
