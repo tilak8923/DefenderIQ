@@ -90,3 +90,7 @@ export default function MessagesPage() {
                         </Button>
                     </form>
                 </div>
+            </div>
+        </div>
+    );
+}
