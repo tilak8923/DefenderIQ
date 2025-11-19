@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer as LeafletMap, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer as LeafletMap, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Leaflet's default icon paths don't work well with bundlers like Webpack.
@@ -9,6 +9,7 @@ import L from 'leaflet';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import { useEffect } from 'react';
 
 const DefaultIcon = L.icon({
   iconUrl,
@@ -29,21 +30,34 @@ interface MapProps {
   summary?: string;
 }
 
+function MapUpdater({ latitude, longitude, summary }: MapProps) {
+    const map = useMap();
+    useEffect(() => {
+        if (latitude && longitude) {
+            map.setView([latitude, longitude], 13);
+        }
+    }, [latitude, longitude, map]);
+
+    return latitude && longitude ? (
+      <Marker position={[latitude, longitude]}>
+        <Popup>{summary || `Location: ${latitude}, ${longitude}`}</Popup>
+      </Marker>
+    ) : null;
+}
+
+
 export default function Map({ latitude, longitude, summary }: MapProps) {
-  const position: [number, number] = latitude && longitude ? [latitude, longitude] : [51.505, -0.09]; // Default to London
-  const zoom = latitude && longitude ? 13 : 2;
+  // Set a default position and zoom for initial render
+  const initialPosition: [number, number] = [20, 0];
+  const initialZoom = 2;
 
   return (
-    <LeafletMap center={position} zoom={zoom} scrollWheelZoom={true} style={{ height: '100%', width: '100%', borderRadius: 'var(--radius)' }}>
+    <LeafletMap center={initialPosition} zoom={initialZoom} scrollWheelZoom={true} style={{ height: '100%', width: '100%', borderRadius: 'var(--radius)' }}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {latitude && longitude && (
-        <Marker position={[latitude, longitude]}>
-          <Popup>{summary || `Location: ${latitude}, ${longitude}`}</Popup>
-        </Marker>
-      )}
+      <MapUpdater latitude={latitude} longitude={longitude} summary={summary} />
     </LeafletMap>
   );
 }
