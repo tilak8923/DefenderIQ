@@ -16,7 +16,6 @@ export default function ThreatMapPage() {
   const [output, setOutput] = useState<GeolocateIpAddressOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [mapMarker, setMapMarker] = useState<{lat: number; lng: number; summary: string} | null>(null);
 
   const handleLookup = async (e: React.FormEvent) => {
@@ -28,7 +27,6 @@ export default function ThreatMapPage() {
     try {
       const result = await geolocateIpAddress({ ipAddress });
       setOutput(result);
-      setMapCenter([result.latitude, result.longitude]);
       setMapMarker({ lat: result.latitude, lng: result.longitude, summary: result.summary });
     } catch (err: any) {
       console.error('Error geolocating IP:', err);
@@ -96,7 +94,7 @@ export default function ThreatMapPage() {
         </div>
         <div className="md:col-span-2">
           <Card className="h-[400px] md:h-[500px]">
-            <ThreatMap center={mapCenter} marker={mapMarker} />
+            <ThreatMap marker={mapMarker} />
           </Card>
         </div>
       </div>
