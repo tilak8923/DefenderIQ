@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Search, Send, UserPlus } from "lucide-react";
+import { Search, Send, UserPlus, X } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, addDoc, serverTimestamp, doc, getDoc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, addDoc, serverTimestamp, doc, getDoc, updateDoc, orderBy, getDocs, limit } from 'firebase/firestore';
 import type { UserProfile, Conversation, Message } from '@/lib/types';
 
 // Helper to get initials from a name
@@ -17,18 +17,26 @@ const getInitials = (name?: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 };
 
+type SearchedUserState = UserProfile | 'not_found' | null;
+
 export default function MessagesPage() {
     const { user: currentUser } = useUser();
     const firestore = useFirestore();
 
     const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
     const [newMessage, setNewMessage] = useState('');
-    const [showUserList, setShowUserList] = useState(false);
+    
+    // State for the new search/invite flow
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchEmail, setSearchEmail] = useState('');
+    const [searchedUser, setSearchedUser] = useState<SearchedUserState>(null);
+    const [isSearchLoading, setIsSearchLoading] = useState(false);
+
 
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
     // --- Data Fetching ---
-    // Fetch all users
+    // Fetch all users - still needed for populating participant details
     const usersQuery = useMemoFirebase(() =>
         firestore ? query(collection(firestore, 'users')) : null,
     [firestore]);
@@ -38,7 +46,7 @@ export default function MessagesPage() {
 
     // Fetch conversations the current user is part of
     const conversationsQuery = useMemoFirebase(() =>
-        currentUser && firestore ? query(collection(firestore, 'conversations'), where('participants', 'array-contains', currentUser.uid)) : null,
+        currentUser && firestore ? query(collection(firestore, 'conversations'), where('participants', 'array-contains', currentUser.uid), orderBy('lastMessageTimestamp', 'desc')) : null,
     [currentUser, firestore]);
     const { data: userConversations } = useCollection<Omit<Conversation, 'id' | 'participantDetails'>>(conversationsQuery);
 
@@ -51,7 +59,7 @@ export default function MessagesPage() {
     // --- Memos & Effects ---
     // Combine conversation data with participant details
     const conversationsWithDetails = useMemo<Conversation[]>(() => {
-        if (!userConversations || !allUsers) return [];
+        if (!userConversations || !allUsers.length) return [];
         return userConversations.map(convo => {
             const participantDetails = (convo.participants || [])
                 .map(pId => allUsers.find(u => u.id === pId))
@@ -69,7 +77,28 @@ export default function MessagesPage() {
     // --- Handlers ---
     const handleSelectConversation = (conversation: Conversation) => {
         setActiveConversation(conversation);
-        setShowUserList(false);
+        setIsSearching(false);
+    };
+
+    const handleSearchUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchEmail.trim() || !firestore) return;
+
+        setIsSearchLoading(true);
+        setSearchedUser(null);
+
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('email', '==', searchEmail.toLowerCase()), limit(1));
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            setSearchedUser('not_found');
+        } else {
+            const userDoc = querySnapshot.docs[0];
+            setSearchedUser({ id: userDoc.id, ...userDoc.data() } as UserProfile);
+        }
+        setIsSearchLoading(false);
     };
     
     const handleStartConversation = async (otherUser: UserProfile) => {
@@ -79,7 +108,7 @@ export default function MessagesPage() {
         const existingConvo = conversationsWithDetails.find(c => c.participants.length === 2 && c.participants.includes(otherUser.id));
         if (existingConvo) {
             setActiveConversation(existingConvo);
-            setShowUserList(false);
+            setIsSearching(false);
             return;
         }
 
@@ -94,7 +123,7 @@ export default function MessagesPage() {
         const newConvoData = { id: newConvoDoc.id, ...newConvoDoc.data(), participantDetails: [currentUser, otherUser] } as Conversation;
 
         setActiveConversation(newConvoData);
-        setShowUserList(false);
+        setIsSearching(false);
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
@@ -125,6 +154,12 @@ export default function MessagesPage() {
     const getMessageSender = (senderId: string) => {
         return allUsers?.find(u => u.id === senderId);
     }
+    
+    const toggleSearch = () => {
+        setIsSearching(!isSearching);
+        setSearchedUser(null);
+        setSearchEmail('');
+    }
 
     return (
         <div className="flex h-[calc(100vh-8rem)]">
@@ -132,29 +167,57 @@ export default function MessagesPage() {
             <div className="w-1/3 border-r flex flex-col">
                 <div className="p-4 border-b flex justify-between items-center">
                     <h1 className="text-2xl font-bold tracking-wider">Messages</h1>
-                    <Button variant="ghost" size="icon" onClick={() => setShowUserList(!showUserList)}>
-                        <UserPlus className="h-5 w-5"/>
+                    <Button variant="ghost" size="icon" onClick={toggleSearch}>
+                        {isSearching ? <X className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
                     </Button>
                 </div>
                 <ScrollArea className="flex-1">
-                    {showUserList ? (
-                        // User List for starting new chats
-                        <div>
-                             {allUsers?.filter(u => u.id !== currentUser?.uid).map(user => (
-                                <div key={user.id} onClick={() => handleStartConversation(user)} className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50">
-                                    <Avatar>
-                                        <AvatarImage src={user.photoURL} />
-                                        <AvatarFallback>{getInitials(user.username || user.email)}</AvatarFallback>
-                                    </Avatar>
-                                    <p className="font-semibold truncate">{user.username || user.email}</p>
+                    {isSearching ? (
+                        <div className="p-4 space-y-4">
+                           <form onSubmit={handleSearchUser} className="flex items-center gap-2">
+                                <Input 
+                                    placeholder="Enter user email..." 
+                                    type="email"
+                                    value={searchEmail}
+                                    onChange={(e) => setSearchEmail(e.target.value)}
+                                />
+                                <Button type="submit" size="icon" disabled={isSearchLoading}>
+                                    <Search className="h-4 w-4" />
+                                </Button>
+                           </form>
+                           {isSearchLoading && <p className="text-sm text-muted-foreground text-center">Searching...</p>}
+                           
+                           {searchedUser && typeof searchedUser === 'object' && (
+                                <div className="p-4 bg-muted rounded-lg space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar>
+                                            <AvatarImage src={searchedUser.photoURL} />
+                                            <AvatarFallback>{getInitials(searchedUser.username || searchedUser.email)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{searchedUser.username || 'Unknown User'}</p>
+                                            <p className="text-sm text-muted-foreground">{searchedUser.email}</p>
+                                        </div>
+                                    </div>
+                                    <Button className="w-full" onClick={() => handleStartConversation(searchedUser)}>Start Conversation</Button>
                                 </div>
-                            ))}
+                           )}
+
+                           {searchedUser === 'not_found' && (
+                                <div className="p-4 bg-muted rounded-lg text-center space-y-3">
+                                    <p className="text-sm">No user found with the email <span className="font-semibold">{searchEmail}</span>.</p>
+                                    <Button className="w-full" variant="outline" disabled>Invite to TSIEM</Button>
+                                    <p className="text-xs text-muted-foreground">(Invite feature coming soon)</p>
+                                </div>
+                           )}
+
                         </div>
                     ) : (
                         // Conversation List
                         <div>
                             {conversationsWithDetails.map((convo) => {
                                 const otherUser = getOtherParticipant(convo);
+                                if (!otherUser) return null; // Don't render self-chats or broken convos
                                 return (
                                     <div key={convo.id} onClick={() => handleSelectConversation(convo)} className={cn("flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50", activeConversation?.id === convo.id && 'bg-muted')}>
                                         <Avatar>
@@ -217,7 +280,7 @@ export default function MessagesPage() {
                     </>
                 ) : (
                     <div className="flex flex-1 items-center justify-center text-muted-foreground">
-                        <p>Select a conversation or start a new one.</p>
+                        <p>Select a conversation or start a new one by searching for a user.</p>
                     </div>
                 )}
             </div>
