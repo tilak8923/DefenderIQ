@@ -23,12 +23,17 @@ def get_default_log_path():
     system = platform.system()
     if system == "Linux":
         # Common log file for Debian/Ubuntu based systems.
-        # You might also use /var/log/auth.log or other specific logs.
-        print("Detected Linux OS. Defaulting to /var/log/syslog")
-        print("NOTE: You may need to run this script with 'sudo' to access system logs.")
+        # This file contains a wide variety of system events.
+        print("---")
+        print("LINUX DETECTED: Monitoring the main system log.")
+        print("This collector will now stream real-time system events to your dashboard.")
+        print("To access this log, you MUST run this script with 'sudo'.")
+        print("  sudo python collector.py")
+        print("---")
         return "/var/log/syslog"
     elif system == "Darwin": # macOS
-        # Use the user's home directory to avoid permission issues.
+        # Modern macOS uses a complex, non-file-based logging system.
+        # So we create a test file in the user's home directory.
         home_dir = os.path.expanduser("~")
         test_log_path = os.path.join(home_dir, "tsiem-test.log")
         
