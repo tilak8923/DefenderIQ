@@ -1,6 +1,11 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
+# A list of environment variables that are available to your application.
+# The LOG_INGESTION_API_KEY is used by the Python collector to securely
+# send log data to the /api/ingest endpoint.
+environmentVariables:
+  LOG_INGESTION_API_KEY: a-super-secret-and-unique-key-for-ingestion
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
@@ -10,3 +15,6 @@ runConfig:
 rewrites:
   - source: /api/ingest
     destination: /api/ingest
+    # This makes the endpoint publicly available.
+    # The endpoint is still secured by the LOG_INGESTION_API_KEY.
+    public: true
