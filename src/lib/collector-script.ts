@@ -5,6 +5,7 @@ import requests
 import time
 import os
 import platform
+import subprocess
 
 # --- Configuration ---
 # Your unique User ID for the TSIEM application.
@@ -18,50 +19,10 @@ API_KEY = "${process.env.NEXT_PUBLIC_LOG_INGESTION_API_KEY || 'a-super-secret-an
 # The URL of your TSIEM application's ingestion API.
 API_ENDPOINT = "${origin}/api/ingest"
 
-def get_default_log_path():
-    """Returns a default log file path based on the operating system."""
-    system = platform.system()
-    if system == "Linux":
-        # Common log file for Debian/Ubuntu based systems.
-        # This file contains a wide variety of system events.
-        print("---")
-        print("LINUX DETECTED: Monitoring the main system log.")
-        print("This collector will now stream real-time system events to your dashboard.")
-        print("To access this log, you MUST run this script with 'sudo'.")
-        print("  sudo python collector.py")
-        print("---")
-        return "/var/log/syslog"
-    elif system == "Darwin": # macOS
-        # Modern macOS uses a complex, non-file-based logging system.
-        # So we create a test file in the user's home directory.
-        home_dir = os.path.expanduser("~")
-        test_log_path = os.path.join(home_dir, "tsiem-test.log")
-        
-        print("---")
-        print("macOS DETECTED: Special instructions for testing:")
-        print(f"Modern macOS does not use simple text files for system logs. For demonstration, this script will monitor a test file in your home directory at: {test_log_path}")
-        print("To simulate log entries, open a NEW, SEPARATE terminal and run the following command:")
-        print(f'  echo "($(date)) - Sample macOS log entry" >> {test_log_path}')
-        print("---")
-        # Create the file if it doesn't exist to prevent immediate FileNotFoundError
-        if not os.path.exists(test_log_path):
-            open(test_log_path, 'a').close()
-        return test_log_path
-    elif system == "Windows":
-        print("Detected Windows OS. NOTE: Windows uses Event Viewer, not flat log files by default.")
-        print("Please update LOG_FILE_PATH to your specific application's log file.")
-        # Example: "C:\\\\Program Files\\\\MyApplication\\\\logs\\\\app.log"
-        return "C:\\\\path\\\\to\\\\your\\\\application.log"
-    else:
-        print(f"Unrecognized OS: {system}. Please set LOG_FILE_PATH manually.")
-        return "/path/to/your/log/file.log"
-
-# The path to the log file you want to monitor.
-# The script attempts to set a reasonable default based on your OS.
-LOG_FILE_PATH = get_default_log_path()
-
-# How often to check for new log entries (in seconds).
-POLL_INTERVAL = 5 
+# How often to send batches of logs to the API (in seconds).
+BATCH_INTERVAL = 5
+# The maximum number of log lines to hold before sending.
+BATCH_SIZE = 100
 
 def send_logs(log_lines):
     """Sends a batch of log lines to the ingestion API."""
@@ -89,52 +50,93 @@ def send_logs(log_lines):
     except requests.exceptions.RequestException as e:
         print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}. {e}")
 
-
 def follow_log_file(file_path):
-    """Monitors a log file for new lines."""
+    """Monitors a traditional log file for new lines (for Linux)."""
     print(f"Starting to monitor log file: {file_path}")
-    
     try:
         with open(file_path, 'r') as file:
-            # Go to the end of the file
             file.seek(0, os.SEEK_END)
-            
             while True:
                 new_lines = file.readlines()
                 if new_lines:
-                    # Strip whitespace and filter out empty lines
                     cleaned_lines = [line.strip() for line in new_lines if line.strip()]
                     send_logs(cleaned_lines)
-                else:
-                    print(f"Waiting for new log entries... (checking every {POLL_INTERVAL} seconds)")
-
-                time.sleep(POLL_INTERVAL)
-                
+                time.sleep(BATCH_INTERVAL)
     except FileNotFoundError:
         print(f"Error: The log file was not found at: {file_path}")
-        print("Please verify the LOG_FILE_PATH variable in the script is correct.")
     except PermissionError:
-        print(f"Error: Permission denied to read the file: {file_path}")
-        print("Please run the script with sufficient privileges (e.g., using 'sudo').")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"Error: Permission denied for {file_path}. Please run with 'sudo'.")
 
+def stream_macos_logs():
+    """Streams logs directly from macOS's Unified Logging System."""
+    print("---")
+    print("macOS DETECTED: Tapping into the real-time Unified Logging System.")
+    print("This requires administrator privileges.")
+    print("If you are not running with 'sudo', the script will likely fail.")
+    print("---")
+    
+    # The 'log stream' command provides real-time logs.
+    # '--style syslog' formats them like traditional log files, which is easier to parse.
+    process = subprocess.Popen(
+        ['log', 'stream', '--style', 'syslog'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    log_batch = []
+    last_send_time = time.time()
+
+    try:
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+            
+            cleaned_line = line.strip()
+            if cleaned_line:
+                log_batch.append(cleaned_line)
+            
+            current_time = time.time()
+            if len(log_batch) >= BATCH_SIZE or (current_time - last_send_time >= BATCH_INTERVAL and log_batch):
+                send_logs(log_batch)
+                log_batch = []
+                last_send_time = current_time
+    
+    except KeyboardInterrupt:
+        print("Stopping log collection.")
+    finally:
+        # Send any remaining logs before exiting
+        if log_batch:
+            send_logs(log_batch)
+        process.terminate()
+
+def main():
+    """Determines the OS and starts the appropriate log collection method."""
+    system = platform.system()
+    
+    if system == "Linux":
+        print("Linux detected. Monitoring /var/log/syslog.")
+        print("This requires 'sudo' to access system logs.")
+        log_path = "/var/log/syslog"
+        follow_log_file(log_path)
+    elif system == "Darwin": # macOS
+        stream_macos_logs()
+    elif system == "Windows":
+        print("Windows detected. File-based logging is required.")
+        print("Please update the LOG_FILE_PATH variable in the script to point to your application's log file.")
+        log_path = "C:\\\\path\\\\to\\\\your\\\\application.log"
+        follow_log_file(log_path)
+    else:
+        print(f"Unrecognized OS: {system}. This script supports Linux and macOS for real-time streaming.")
 
 if __name__ == "__main__":
     if not USER_ID or USER_ID == "YOUR_USER_ID":
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!! CRITICAL: Could not determine User ID. Please log in to the app and !!!")
-        print("!!!           copy the script again.                                   !!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("CRITICAL: User ID not found. Please log in and copy the script again.")
     elif not API_KEY or API_KEY == "YOUR_API_KEY":
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!! CRITICAL: API Key not found. Check your .env file in the project.  !!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    elif "path/to/your" in LOG_FILE_PATH:
-         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-         print("!!! ACTION NEEDED: Please update the LOG_FILE_PATH variable in this    !!!")
-         print("!!!                  script to point to the correct log file.          !!!")
-         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("CRITICAL: API Key not found. This is a configuration issue.")
     else:
-        follow_log_file(LOG_FILE_PATH)
-`;
+        try:
+            main()
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
