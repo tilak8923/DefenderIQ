@@ -28,10 +28,13 @@ def get_default_log_path():
         print("NOTE: You may need to run this script with 'sudo' to access system logs.")
         return "/var/log/syslog"
     elif system == "Darwin": # macOS
-        test_log_path = "/tmp/tsiem-test.log"
+        # Use the user's home directory to avoid permission issues.
+        home_dir = os.path.expanduser("~")
+        test_log_path = os.path.join(home_dir, "tsiem-test.log")
+        
         print("---")
         print("macOS DETECTED: Special instructions for testing:")
-        print(f"Modern macOS does not use simple text files for system logs. For demonstration, this script will monitor a test file at: {test_log_path}")
+        print(f"Modern macOS does not use simple text files for system logs. For demonstration, this script will monitor a test file in your home directory at: {test_log_path}")
         print("To simulate log entries, open a NEW, SEPARATE terminal and run the following command:")
         print(f'  echo "($(date)) - Sample macOS log entry" >> {test_log_path}')
         print("---")
