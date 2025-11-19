@@ -24,13 +24,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    // This is required to allow the Next.js dev server to accept requests from the
-    // App Hosting preview URL.
-    allowedDevOrigins: [
-      '6000-firebase-studio-1757076294958.cluster-mwsteha33jfdowtvzffztbjcj6.cloudworkstations.dev',
-    ],
-  },
+  // This is required to allow the Next.js dev server to accept requests from the
+  // App Hosting preview URL.
+  allowedDevOrigins: [
+    '6000-firebase-studio-1757076294958.cluster-mwsteha33jfdowtvzffztbjcj6.cloudworkstations.dev',
+  ],
 };
 
 export default nextConfig;
