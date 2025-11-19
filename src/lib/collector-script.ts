@@ -1,6 +1,5 @@
 
 
-
 export const getPythonCollectorScript = (userId: string | null, origin: string) => `
 import requests
 import time
@@ -138,8 +137,6 @@ def main():
 if __name__ == "__main__":
     if not USER_ID or USER_ID == "YOUR_USER_ID":
         print("CRITICAL: User ID not found. Please log in and copy the script again.")
-    elif not API_KEY or API_KEY == "a-super-secret-and-unique-key-for-ingestion":
-        print("CRITICAL: API Key not found. This is a configuration issue.")
     else:
         try:
             main()
