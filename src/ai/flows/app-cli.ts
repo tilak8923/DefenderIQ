@@ -66,6 +66,27 @@ const generateReportTool = ai.defineTool(
   }
 );
 
+// New Tool to simulate network commands
+const runNetworkCommandTool = ai.defineTool(
+  {
+    name: 'runNetworkCommand',
+    description: 'Simulates running a basic network diagnostic command like ping or traceroute and provides a descriptive output.',
+    inputSchema: z.object({
+      command: z.string().describe('The full network command to simulate, e.g., "ping 8.8.8.8" or "traceroute google.com".'),
+    }),
+    outputSchema: z.string().describe('A descriptive, formatted output of the simulated command execution.'),
+  },
+  async ({ command }) => {
+    const { text } = await ai.generate({
+      prompt: `You are a network analysis tool. The user has run the command: "${command}".
+Provide a realistic but simulated output for this command.
+Explain what the command does and what the output means. For example, for a ping, describe the packets being sent and the round-trip time. For a traceroute, describe the hops.
+Format the output for a terminal.`,
+    });
+    return text;
+  }
+);
+
 
 const AppCliInputSchema = z.object({
   command: z.string().describe('The command typed by the user in the terminal.'),
@@ -89,8 +110,8 @@ const appCliFlow = ai.defineFlow(
   },
   async ({ command }) => {
     const llmResponse = await ai.generate({
-      prompt: `You are a command-line interface for a security application. Execute the user's command using the available tools. Command: ${command}`,
-      tools: [listAlertsTool, generateReportTool],
+      prompt: `You are a command-line interface for a security application. Execute the user's command using the available tools. If the command is a common network command like 'ping' or 'traceroute', use the runNetworkCommand tool. Command: ${command}`,
+      tools: [listAlertsTool, generateReportTool, runNetworkCommandTool],
     });
 
     const toolResponse = llmResponse.toolRequest?.tool?.output;
