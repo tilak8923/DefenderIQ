@@ -21,15 +21,15 @@ import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/logs', icon: FileText, label: 'Logs' },
-  { href: '/alerts', icon: AlertTriangle, label: 'Alerts' },
-  { href: '/reports', icon: FileBarChart, label: 'Reports' },
-  { href: '/threat-intelligence', icon: ShieldCheck, label: 'Threat Intel' },
-  { href: '/threat-map', icon: Map, label: 'Threat Map' },
-  { href: '/analysis', icon: Zap, label: 'Analysis' },
-  { href: '/collectors', icon: Plug, label: 'Collectors' },
-  { href: '/terminal', icon: Terminal, label: 'Terminal' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/logs', label: 'Logs' },
+  { href: '/alerts', label: 'Alerts' },
+  { href: '/reports', label: 'Reports' },
+  { href: '/threat-intelligence', label: 'Threat Intel' },
+  { href: '/threat-map', label: 'Threat Map' },
+  { href: '/analysis', label: 'Analysis' },
+  { href: '/collectors', label: 'Collectors' },
+  { href: '/terminal', label: 'Terminal' },
 ];
 
 export function MainNav() {
@@ -52,7 +52,7 @@ export function MainNav() {
           <LogOut className="h-5 w-5" />
         </Button>
       </div>
-      <nav className="flex items-center space-x-2 lg:space-x-4 overflow-x-auto px-4 pb-2">
+      <nav className="flex items-center space-x-2 lg:space-x-4 overflow-x-auto px-4 pb-2 custom-scrollbar">
         {navItems.map((item) => (
           <Link
             key={item.href}
@@ -64,7 +64,6 @@ export function MainNav() {
                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
             )}
           >
-            <item.icon className="h-4 w-4" />
             <span>{item.label}</span>
           </Link>
         ))}
