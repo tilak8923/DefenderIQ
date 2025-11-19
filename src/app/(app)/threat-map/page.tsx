@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,16 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, MapPin } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
-// Dynamically import the Map component to avoid SSR issues with Leaflet
-import dynamic from 'next/dynamic';
-const MapContainer = dynamic(() => import('@/components/map-container'), { ssr: false });
+import ThreatMap from './map';
 
 export default function ThreatMapPage() {
-  const [ipAddress, setIpAddress] = useState('8.8.8.8'); // Default to a known public IP
+  const [ipAddress, setIpAddress] = useState('8.8.8.8');
   const [output, setOutput] = useState<GeolocateIpAddressOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [mapMarker, setMapMarker] = useState<{lat: number; lng: number; summary: string} | null>(null);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +28,12 @@ export default function ThreatMapPage() {
     try {
       const result = await geolocateIpAddress({ ipAddress });
       setOutput(result);
+      setMapCenter([result.latitude, result.longitude]);
+      setMapMarker({ lat: result.latitude, lng: result.longitude, summary: result.summary });
     } catch (err: any) {
       console.error('Error geolocating IP:', err);
       setError(err.message || 'Failed to geolocate IP address.');
+      setMapMarker(null);
     } finally {
       setRunning(false);
     }
@@ -93,11 +96,7 @@ export default function ThreatMapPage() {
         </div>
         <div className="md:col-span-2">
           <Card className="h-[400px] md:h-[500px]">
-            <MapContainer
-                latitude={output?.latitude}
-                longitude={output?.longitude}
-                summary={output?.summary}
-             />
+            <ThreatMap center={mapCenter} marker={mapMarker} />
           </Card>
         </div>
       </div>
