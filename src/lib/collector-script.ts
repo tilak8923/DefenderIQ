@@ -32,25 +32,31 @@ def send_logs(log_lines):
         return
         
     print(f"Sending {len(log_lines)} new log entries for user {USER_ID}...")
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
+    payload = {
+        "userId": USER_ID,
+        "logs": "\\n".join(log_lines)
+    }
     try:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {API_KEY}"
-        }
-        payload = {
-            "userId": USER_ID,
-            "logs": "\\n".join(log_lines)
-        }
-        response = requests.post(API_ENDPOINT, json=payload, headers=headers)
+        response = requests.post(API_ENDPOINT, json=payload, headers=headers, timeout=30, verify=True)
+        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
         
-        if response.status_code == 200:
-            print(f"Successfully ingested {response.json().get('ingestedCount', 0)} logs.")
-        else:
-            print(f"Error: Failed to ingest logs. Status code: {response.status_code}")
-            print(f"Response: {response.text}")
+        print(f"Successfully ingested {response.json().get('ingestedCount', 0)} logs.")
             
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: HTTP Error {e.response.status_code} for URL {e.response.url}")
+        print(f"Response: {e.response.text}")
+    except requests.exceptions.ConnectionError as e:
+        print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}.")
+        print(f"Details: {e}")
+    except requests.exceptions.Timeout:
+        print("Error: The request to the API timed out.")
     except requests.exceptions.RequestException as e:
-        print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}. {e}")
+        print(f"An unexpected error occurred with the request: {e}")
+
 
 def follow_linux_log_file(file_path):
     """Monitors a traditional log file for new lines on Linux."""
@@ -224,6 +230,8 @@ if __name__ == "__main__":
     else:
         try:
             main()
+        except KeyboardInterrupt:
+            print("\\nStopping log collection.")
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 `
