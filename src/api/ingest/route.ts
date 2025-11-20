@@ -4,6 +4,10 @@ import { parseLogEntries } from '@/ai/flows/parse-log-entries';
 import { initializeFirebase } from '@/firebase';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 
+// This is the most important change. It tells Next.js to treat this as a fully dynamic
+// API endpoint, which is necessary for handling POST requests from non-browser clients.
+export const dynamic = 'force-dynamic';
+
 const INGESTION_API_KEY = "a-super-secret-and-unique-key-for-ingestion";
 
 export async function POST(request: Request) {
@@ -45,10 +49,16 @@ export async function POST(request: Request) {
     
     await batch.commit();
 
+    // The response headers are crucial for external clients.
+    const headers = {
+        'Access-Control-Allow-Origin': '*', // Allow requests from any origin
+        'Cache-Control': 'no-store', // Prevent caching of this API response
+    };
+
     return NextResponse.json({ 
         message: `Successfully ingested ${parsedLogs.length} log entries.`,
         ingestedCount: parsedLogs.length 
-    }, { status: 200 });
+    }, { status: 200, headers });
 
   } catch (error: any) {
     console.error('Ingestion API Error:', error);
