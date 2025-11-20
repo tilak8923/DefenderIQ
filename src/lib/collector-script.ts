@@ -18,7 +18,7 @@ from datetime import datetime
 # --- ACTION REQUIRED: Service Account Key ---
 # 1. Go to your Google Cloud Console: https://console.cloud.google.com/
 # 2. Navigate to "IAM & Admin" > "Service Accounts".
-# 3. Find or create a service account with the "Firebase Realtime Database User" or "Cloud Datastore User" role.
+# 3. Find or create a service account. When creating, assign it the "Cloud Datastore User" role. This is required to allow the script to write to Firestore.
 # 4. Click on the service account, go to the "Keys" tab, and "Add Key" > "Create new key".
 # 5. Choose JSON and download the file.
 # 6. Paste the entire content of the downloaded JSON file into the SERVICE_ACCOUNT_KEY variable below.
