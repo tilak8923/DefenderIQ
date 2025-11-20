@@ -18,16 +18,14 @@ from datetime import datetime
 # --- ACTION REQUIRED: Service Account Key ---
 # 1. Go to your Google Cloud Console: https://console.cloud.google.com/
 # 2. Navigate to "IAM & Admin" > "Service Accounts".
-# 3. Find or create a service account. When creating, assign it the "Cloud Datastore User" role. This is required to allow the script to write to Firestore.
-# 4. Click on the service account, go to the "Keys" tab, and "Add Key" > "Create new key".
+# 3. Find or create a service account. When creating, assign it the "Cloud Datastore User" role.
+# 4. Click the service account, go to the "Keys" tab, and "Add Key" > "Create new key".
 # 5. Choose JSON and download the file.
-# 6. Paste the entire content of the downloaded JSON file into the SERVICE_ACCOUNT_KEY variable below.
+# 6. IMPORTANT: Rename the downloaded file to 'service-account-key.json' and place it in the SAME DIRECTORY as this Python script.
 #
-# IMPORTANT: Treat this key like a password. Do not share it or commit it to public repositories.
+# DO NOT RENAME OR EDIT THE CONTENT OF THE JSON FILE.
 # ======================================================================================
-SERVICE_ACCOUNT_KEY = """
-PASTE_YOUR_DOWNLOADED_SERVICE_ACCOUNT_JSON_HERE
-"""
+SERVICE_ACCOUNT_KEY_PATH = "service-account-key.json"
 
 # Your unique User ID for the TSIEM application.
 # This is automatically set for you when you are logged in.
@@ -43,16 +41,15 @@ LAST_EVENT_TIMESTAMP_FILE = Path.home() / '.tsiem_last_event_time.txt'
 # --- Firebase Initialization ---
 try:
     if not firebase_admin._apps:
-        service_account_dict = json.loads(SERVICE_ACCOUNT_KEY)
-        cred = credentials.Certificate(service_account_dict)
+        cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_PATH)
         firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("Successfully connected to Firestore.")
-except json.JSONDecodeError:
-    print("CRITICAL ERROR: The SERVICE_ACCOUNT_KEY is not a valid JSON. Please paste the entire content of your service account file.")
+except FileNotFoundError:
+    print(f"CRITICAL ERROR: The service account file was not found at '{SERVICE_ACCOUNT_KEY_PATH}'. Please ensure the file exists and is in the same directory as this script.")
     exit()
 except Exception as e:
-    print(f"CRITICAL ERROR: Failed to initialize Firebase. Please check your Service Account Key and permissions. Details: {e}")
+    print(f"CRITICAL ERROR: Failed to initialize Firebase. Please check your Service Account Key file and its permissions. Details: {e}")
     exit()
 
 
@@ -261,8 +258,7 @@ def main():
 if __name__ == "__main__":
     if not USER_ID or USER_ID == "YOUR_USER_ID":
         print("CRITICAL: User ID not found. Please log in to the web UI and copy the script again.")
-    elif "PASTE_YOUR_DOWNLOADED_SERVICE_ACCOUNT_JSON_HERE" in SERVICE_ACCOUNT_KEY:
-        print("CRITICAL: Service Account Key not found. Please follow the instructions at the top of the script to configure it.")
+    # The check for the key content is removed, as we now check for file existence at initialization.
     else:
         try:
             main()
