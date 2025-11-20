@@ -1,24 +1,37 @@
 
+
 export const getPythonCollectorScript = (userId: string | null, origin: string) => `
-import requests
+import firebase_admin
+from firebase_admin import credentials, firestore
 import time
 import os
 import platform
 import subprocess
 from pathlib import Path
 import xml.etree.ElementTree as ET
+import json
 
-# --- Configuration ---
+# ======================================================================================
+# --- Configuration & Setup ---
+# ======================================================================================
+
+# --- ACTION REQUIRED: Service Account Key ---
+# 1. Go to your Google Cloud Console: https://console.cloud.google.com/
+# 2. Navigate to "IAM & Admin" > "Service Accounts".
+# 3. Find or create a service account with the "Firebase Realtime Database User" or "Cloud Datastore User" role.
+# 4. Click on the service account, go to the "Keys" tab, and "Add Key" > "Create new key".
+# 5. Choose JSON and download the file.
+# 6. Paste the entire content of the downloaded JSON file into the SERVICE_ACCOUNT_KEY variable below.
+#
+# IMPORTANT: Treat this key like a password. Do not share it or commit it to public repositories.
+# ======================================================================================
+SERVICE_ACCOUNT_KEY = """
+PASTE_YOUR_DOWNLOADED_SERVICE_ACCOUNT_JSON_HERE
+"""
+
 # Your unique User ID for the TSIEM application.
 # This is automatically set for you when you are logged in.
 USER_ID = "${userId || 'YOUR_USER_ID'}" 
-
-# The secret API key for the ingestion endpoint.
-# This is pre-filled for you. Keep it safe.
-API_KEY = "a-super-secret-and-unique-key-for-ingestion"
-
-# The URL of your TSIEM application's ingestion API.
-API_ENDPOINT = "${origin}/api/ingest"
 
 # How often to check for new logs (in seconds).
 COLLECTION_INTERVAL = 10
@@ -26,43 +39,68 @@ COLLECTION_INTERVAL = 10
 # A file to store the timestamp of the last collected event (for Windows).
 LAST_EVENT_TIMESTAMP_FILE = Path.home() / '.tsiem_last_event_time.txt'
 
-def send_logs(log_lines):
-    """Sends a batch of log lines to the ingestion API."""
+
+# --- Firebase Initialization ---
+try:
+    if not firebase_admin._apps:
+        service_account_dict = json.loads(SERVICE_ACCOUNT_KEY)
+        cred = credentials.Certificate(service_account_dict)
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("Successfully connected to Firestore.")
+except json.JSONDecodeError:
+    print("CRITICAL ERROR: The SERVICE_ACCOUNT_KEY is not a valid JSON. Please paste the entire content of your service account file.")
+    exit()
+except Exception as e:
+    print(f"CRITICAL ERROR: Failed to initialize Firebase. Please check your Service Account Key and permissions. Details: {e}")
+    exit()
+
+
+def write_logs_to_firestore(log_lines):
+    """Writes a batch of log entries to Firestore under the current user's collection."""
     if not log_lines:
         return
         
-    print(f"Sending {len(log_lines)} new log entries for user {USER_ID}...")
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}"
-    }
-    payload = {
-        "userId": USER_ID,
-        "logs": "\\n".join(log_lines)
-    }
+    print(f"Writing {len(log_lines)} new log entries to Firestore for user {USER_ID}...")
+    
     try:
-        response = requests.post(API_ENDPOINT, json=payload, headers=headers, timeout=30, verify=True)
-        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
+        batch = db.batch()
+        logs_collection_ref = db.collection('users', USER_ID, 'logs')
         
-        print(f"Successfully ingested {response.json().get('ingestedCount', 0)} logs.")
+        for line in log_lines:
+            # For simplicity, we're parsing basic info here. A more robust solution might use a cloud function.
+            # This is a placeholder parser. The API route did this via an AI flow.
+            # We will replicate a simpler version here.
+            parts = line.split()
+            timestamp = parts[0] if parts else new Date().toISOString()
+            source = parts[4] if len(parts) > 4 else 'Unknown'
+            severity = 'INFO'
+            if 'error' in line.lower() or 'critical' in line.lower():
+                severity = 'CRITICAL'
+            elif 'warn' in line.lower():
+                severity = 'WARN'
+
+            log_entry = {
+                'timestamp': timestamp,
+                'source': source,
+                'message': line,
+                'severity': severity,
+                'userId': USER_ID # Denormalize for rule validation
+            }
+            new_log_ref = logs_collection_ref.document()
+            batch.set(new_log_ref, log_entry)
             
-    except requests.exceptions.HTTPError as e:
-        print(f"Error: HTTP Error {e.response.status_code} for URL {e.response.url}")
-        print(f"Response: {e.response.text}")
-    except requests.exceptions.ConnectionError as e:
-        print(f"Error: Could not connect to the API endpoint at {API_ENDPOINT}.")
-        print(f"Details: {e}")
-    except requests.exceptions.Timeout:
-        print("Error: The request to the API timed out.")
-    except requests.exceptions.RequestException as e:
-        print(f"An unexpected error occurred with the request: {e}")
+        batch.commit()
+        print(f"Successfully wrote {len(log_lines)} logs to Firestore.")
+            
+    except Exception as e:
+        print(f"Error: Could not write logs to Firestore. Details: {e}")
 
 
 def follow_linux_log_file(file_path):
     """Monitors a traditional log file for new lines on Linux."""
     print(f"Starting to monitor log file: {file_path}")
     try:
-        # Ensure the file exists before trying to open it
         Path(file_path).touch()
         with open(file_path, 'r') as file:
             file.seek(0, os.SEEK_END)
@@ -70,7 +108,7 @@ def follow_linux_log_file(file_path):
                 new_lines = file.readlines()
                 if new_lines:
                     cleaned_lines = [line.strip() for line in new_lines if line.strip()]
-                    send_logs(cleaned_lines)
+                    write_logs_to_firestore(cleaned_lines)
                 time.sleep(COLLECTION_INTERVAL)
     except FileNotFoundError:
         print(f"Error: The log file was not found at: {file_path}")
@@ -106,7 +144,7 @@ def stream_macos_logs():
             
             current_time = time.time()
             if len(log_batch) >= 100 or (current_time - last_send_time >= COLLECTION_INTERVAL and log_batch):
-                send_logs(log_batch)
+                write_logs_to_firestore(log_batch)
                 log_batch = []
                 last_send_time = current_time
     
@@ -114,7 +152,7 @@ def stream_macos_logs():
         print("Stopping log collection.")
     finally:
         if log_batch:
-            send_logs(log_batch)
+            write_logs_to_firestore(log_batch)
         process.terminate()
 
 def stream_windows_logs():
@@ -166,8 +204,6 @@ def stream_windows_logs():
     while True:
         try:
             last_timestamp = get_last_event_time()
-            # wevtutil query to get events created after the last recorded timestamp
-            # We query both Application and System logs.
             query = f"*[System[TimeCreated[@SystemTime > '{last_timestamp}']]]" if last_timestamp else "*"
             
             all_new_logs = []
@@ -183,14 +219,13 @@ def stream_windows_logs():
                     if parsed_logs:
                         all_new_logs.extend(parsed_logs)
                     if new_latest_timestamp:
-                        # Keep track of the most recent timestamp across all logs
                         if not latest_timestamp_in_batch or new_latest_timestamp > latest_timestamp_in_batch:
                             latest_timestamp_in_batch = new_latest_timestamp
                 elif process.stderr:
                     print(f"Error querying '{log_name}' log: {process.stderr.strip()}")
 
             if all_new_logs:
-                send_logs(all_new_logs)
+                write_logs_to_firestore(all_new_logs)
             
             if latest_timestamp_in_batch and latest_timestamp_in_batch != last_timestamp:
                 set_last_event_time(latest_timestamp_in_batch)
@@ -227,6 +262,8 @@ def main():
 if __name__ == "__main__":
     if not USER_ID or USER_ID == "YOUR_USER_ID":
         print("CRITICAL: User ID not found. Please log in to the web UI and copy the script again.")
+    elif "PASTE_YOUR_DOWNLOADED_SERVICE_ACCOUNT_JSON_HERE" in SERVICE_ACCOUNT_KEY:
+        print("CRITICAL: Service Account Key not found. Please follow the instructions at the top of the script to configure it.")
     else:
         try:
             main()
