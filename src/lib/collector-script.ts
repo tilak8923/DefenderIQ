@@ -1,5 +1,4 @@
 
-
 export const getPythonCollectorScript = (userId: string | null, origin: string) => `
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -10,6 +9,7 @@ import subprocess
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import json
+from datetime import datetime
 
 # ======================================================================================
 # --- Configuration & Setup ---
@@ -69,10 +69,9 @@ def write_logs_to_firestore(log_lines):
         
         for line in log_lines:
             # For simplicity, we're parsing basic info here. A more robust solution might use a cloud function.
-            # This is a placeholder parser. The API route did this via an AI flow.
-            # We will replicate a simpler version here.
+            # This is a placeholder parser.
             parts = line.split()
-            timestamp = parts[0] if parts else new Date().toISOString()
+            timestamp = parts[0] if parts else datetime.now().isoformat()
             source = parts[4] if len(parts) > 4 else 'Unknown'
             severity = 'INFO'
             if 'error' in line.lower() or 'critical' in line.lower():
@@ -256,7 +255,7 @@ def main():
     else:
         print(f"Unrecognized OS: {system}. This script supports Linux, macOS, and Windows.")
         print("For this OS, you will need to manually configure a log file path.")
-        log_path = "/path/to/your/log/file.log"
+        log_path = "/path/to/your/log/file.log" # Fallback for unsupported OS
         follow_linux_log_file(log_path)
 
 if __name__ == "__main__":

@@ -6,11 +6,3 @@ runConfig:
   # The maximum number of container instances that can be running for your backend.
   # If you want to handle more traffic, you can increase this value.
   maxInstances: 1
-
-# The rewrites property specifies how to handle incoming requests.
-# This rewrite makes the /api/ingest endpoint public, allowing the
-# Python collector to send data from outside the cloud environment.
-# The endpoint is still secured by the hardcoded API key in the script and the API route.
-rewrites:
-  - source: /api/ingest
-    public: true
