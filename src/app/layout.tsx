@@ -20,7 +20,7 @@ export default function RootLayout({
       <head>
          <link rel="stylesheet" href="https://use.typekit.net/clb1mwh.css" />
       </head>
-      <body className="font-body antialiased">
+      <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <FirebaseClientProvider>
               {children}
@@ -32,5 +32,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    
