@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, BarChart, Terminal, ShieldCheck, Instagram, Linkedin, Github, Twitter } from 'lucide-react';
+import { ChevronDown, BarChart, Terminal, ShieldCheck, Instagram, Linkedin, Github, Twitter, Globe } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
@@ -31,7 +31,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen text-white font-body">
+    <div className="flex flex-col min-h-screen text-white font-body bg-[#141413]">
       <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto h-16 flex items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="flex items-center gap-2">
@@ -217,10 +217,11 @@ if (alert.matches(PhishingAttempt)) {
                         <span className="font-bold text-lg tracking-wider">DefendIQ</span>
                     </Link>
                     <div className="flex space-x-4 mt-4">
-                        <a href="https://www.instagram.com/_impetuous_illusionist_90/" className="text-neutral-400 hover:text-white"><Instagram size={20} /></a>
-                        <a href="https://www.linkedin.com/in/tilak-tiwari-33b84825a/" className="text-neutral-400 hover:text-white"><Linkedin size={20} /></a>
-                        <a href="https://github.com/tilak8923" className="text-neutral-400 hover:text-white"><Github size={20} /></a>
-                        <a href="https://x.com/tilaktiwari_" className="text-neutral-400 hover:text-white"><Twitter size={20} /></a>
+                        <a href="https://tilakfolio.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white"><Globe size={20} /></a>
+                        <a href="https://www.instagram.com/_impetuous_illusionist_90/" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white"><Instagram size={20} /></a>
+                        <a href="https://www.linkedin.com/in/tilak-tiwari-33b84825a/" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white"><Linkedin size={20} /></a>
+                        <a href="https://github.com/tilak8923" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white"><Github size={20} /></a>
+                        <a href="https://x.com/tilaktiwari_" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white"><Twitter size={20} /></a>
                     </div>
                 </div>
 
@@ -267,3 +268,5 @@ if (alert.matches(PhishingAttempt)) {
     </div>
   );
 }
+
+    
