@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -21,9 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Search, Rss } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUserId } from '@/hooks/use-user-id';
-import { collection, onSnapshot, query } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { sampleLogEntries } from '@/lib/data';
 import type { LogEntry } from '@/lib/types';
 
 
@@ -41,31 +39,15 @@ const getSeverityBadgeVariant = (severity: string) => {
 };
 
 export default function LogsPage() {
-  const userId = useUserId();
-  const firestore = useFirestore();
-  const [allLogEntries, setAllLogEntries] = useState<LogEntry[]>([]);
+  const [allLogEntries] = useState<LogEntry[]>(() => 
+    sampleLogEntries.map((log, index) => ({
+      ...log,
+      id: `log-${index}`
+    })).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('ALL');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!userId || !firestore) return;
-    
-    setLoading(true);
-    const logsQuery = query(collection(firestore, 'users', userId, 'logs'));
-    
-    const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
-        const logsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LogEntry));
-        setAllLogEntries(logsData.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-        setLoading(false);
-    }, (error) => {
-        console.error("Error fetching logs:", error);
-        setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [userId, firestore]);
-
+  
   const filteredLogs = allLogEntries.filter((log) => {
     const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.source.toLowerCase().includes(searchTerm.toLowerCase());
@@ -78,7 +60,7 @@ export default function LogsPage() {
         <Rss className="mx-auto h-12 w-12 text-muted-foreground" />
         <h3 className="mt-4 text-lg font-semibold">No Log Data Found</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-            No log entries have been found for your account.
+            No log entries match your current filters.
         </p>
     </div>
   );
@@ -120,32 +102,28 @@ export default function LogsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (
-                <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">Loading logs...</TableCell>
-                </TableRow>
-              )}
-              {!loading && filteredLogs.length === 0 && (
+              {filteredLogs.length === 0 ? (
                  <TableRow>
                     <TableCell colSpan={4}>
                         {renderEmptyState()}
                     </TableCell>
                 </TableRow>
+              ) : (
+                filteredLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant={getSeverityBadgeVariant(log.severity)}
+                        className={cn(log.severity === 'WARN' && 'bg-warning text-black')}
+                      >
+                        {log.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{log.source}</TableCell>
+                    <TableCell className="font-mono">{log.message}</TableCell>
+                  </TableRow>
+                ))
               )}
-              {!loading && filteredLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant={getSeverityBadgeVariant(log.severity)}
-                      className={cn(log.severity === 'WARN' && 'bg-warning text-black')}
-                    >
-                      {log.severity}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{log.source}</TableCell>
-                  <TableCell className="font-mono">{log.message}</TableCell>
-                </TableRow>
-              ))}
             </TableBody>
           </Table>
         </div>

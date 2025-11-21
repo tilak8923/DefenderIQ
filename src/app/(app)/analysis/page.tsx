@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { runLogAnalysisForUser } from '@/ai/flows/run-log-analysis';
-import type { RunLogAnalysisOutput } from '@/ai/flows/run-log-analysis';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,50 +13,46 @@ import {
 import { Loader2, Zap } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { useUserId } from '@/hooks/use-user-id';
+
+interface RunLogAnalysisOutput {
+  logsScanned: number;
+  rulesEvaluated: number;
+  alertsCreated: number;
+}
 
 export default function AnalysisPage() {
-  const userId = useUserId();
   const [output, setOutput] = useState<RunLogAnalysisOutput | null>(null);
   const [running, setRunning] = useState(false);
   const { toast } = useToast();
 
   const handleRunAnalysis = async () => {
-    if (!userId) {
-      toast({
-        variant: 'destructive',
-        title: "Error",
-        description: "User ID not found. Cannot start analysis.",
-      });
-      return;
-    }
     setRunning(true);
     setOutput(null);
 
-    try {
-      const result = await runLogAnalysisForUser({ userId });
-      setOutput(result);
-      if (result.alertsCreated > 0) {
-        toast({
-            title: "Analysis Complete",
-            description: `${result.alertsCreated} new alert(s) have been generated. Check the dashboard.`,
-        });
-      } else {
-         toast({
-            title: "Analysis Complete",
-            description: `No new threats detected this time.`,
-        });
-      }
-    } catch (error) {
-      console.error('Error running analysis:', error);
+    // Simulate an async operation
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const result: RunLogAnalysisOutput = {
+      logsScanned: 152,
+      rulesEvaluated: 4,
+      alertsCreated: 2,
+    };
+
+    setOutput(result);
+    
+    if (result.alertsCreated > 0) {
+      toast({
+          title: "Analysis Complete",
+          description: `${result.alertsCreated} new alert(s) have been generated. Check the dashboard.`,
+      });
+    } else {
        toast({
-            variant: 'destructive',
-            title: "Analysis Failed",
-            description: "Something went wrong while analyzing the logs.",
-        });
-    } finally {
-      setRunning(false);
+          title: "Analysis Complete",
+          description: `No new threats detected this time.`,
+      });
     }
+
+    setRunning(false);
   };
 
   return (
@@ -83,13 +77,13 @@ export default function AnalysisPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleRunAnalysis} disabled={running || !userId}>
+            <Button onClick={handleRunAnalysis} disabled={running}>
               {running ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Zap className="mr-2 h-4 w-4" />
               )}
-              {userId ? 'Start Analysis' : 'Initializing...'}
+              Start Analysis
             </Button>
           </CardFooter>
         </Card>

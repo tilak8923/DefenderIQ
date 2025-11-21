@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -25,6 +25,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,9 +34,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUserId } from '@/hooks/use-user-id';
-import { collection, onSnapshot, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { defaultAlertRules } from '@/lib/data';
 import type { AlertRule } from '@/lib/types';
 
 
@@ -53,9 +52,10 @@ const getSeverityBadgeVariant = (severity: string) => {
 };
 
 export default function AlertsPage() {
-    const userId = useUserId();
-    const firestore = useFirestore();
-    const [rules, setRules] = useState<AlertRule[]>([]);
+    const [rules, setRules] = useState<AlertRule[]>(() => 
+        defaultAlertRules.map((rule, index) => ({...rule, id: `rule-${index}`}))
+    );
+    const [isNewRuleDialogOpen, setIsNewRuleDialogOpen] = useState(false);
     
     // Form state for new rule
     const [newRuleName, setNewRuleName] = useState('');
@@ -63,48 +63,40 @@ export default function AlertsPage() {
     const [newRuleSeverity, setNewRuleSeverity] = useState('');
 
 
-    useEffect(() => {
-        if (!userId || !firestore) return;
-
-        const rulesQuery = collection(firestore, 'users', userId, 'alertRules');
-        const unsubscribe = onSnapshot(rulesQuery, (snapshot) => {
-            const rulesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AlertRule));
-            setRules(rulesData);
-        }, (error) => {
-            console.error("Error fetching alert rules:", error);
-        });
-
-        return () => unsubscribe();
-    }, [userId, firestore]);
-    
-    const handleToggleRule = async (rule: AlertRule) => {
-        if (!userId || !firestore) return;
-        const ruleRef = doc(firestore, 'users', userId, 'alertRules', rule.id);
-        await updateDoc(ruleRef, { enabled: !rule.enabled });
+    const handleToggleRule = (ruleId: string) => {
+        setRules(currentRules => 
+            currentRules.map(rule => 
+                rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
+            )
+        );
     }
 
-    const handleCreateRule = async (e: React.FormEvent) => {
+    const handleCreateRule = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!userId || !newRuleName || !newRuleCondition || !newRuleSeverity || !firestore) return;
+        if (!newRuleName || !newRuleCondition || !newRuleSeverity) return;
 
-        await addDoc(collection(firestore, 'users', userId, 'alertRules'), {
+        const newRule: AlertRule = {
+            id: `rule-${Date.now()}`,
             name: newRuleName,
             condition: newRuleCondition,
-            severity: newRuleSeverity,
+            severity: newRuleSeverity as AlertRule['severity'],
             enabled: true,
-        });
+        };
+
+        setRules(currentRules => [newRule, ...currentRules]);
         
-        // Reset form
+        // Reset form and close dialog
         setNewRuleName('');
         setNewRuleCondition('');
         setNewRuleSeverity('');
+        setIsNewRuleDialogOpen(false);
     }
 
     return (
         <div className="flex flex-col gap-4">
             <header className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold tracking-wider">Alert Management</h1>
-                 <Dialog>
+                 <Dialog open={isNewRuleDialogOpen} onOpenChange={setIsNewRuleDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" /> New Rule
@@ -121,15 +113,15 @@ export default function AlertsPage() {
                              <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="name" className="text-right">Name</Label>
-                                    <Input id="name" value={newRuleName} onChange={e => setNewRuleName(e.target.value)} className="col-span-3" />
+                                    <Input id="name" value={newRuleName} onChange={e => setNewRuleName(e.target.value)} className="col-span-3" required/>
                                 </div>
                                  <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="condition" className="text-right">Condition</Label>
-                                    <Input id="condition" value={newRuleCondition} onChange={e => setNewRuleCondition(e.target.value)} placeholder="e.g., event.type == 'failed_login'" className="col-span-3" />
+                                    <Input id="condition" value={newRuleCondition} onChange={e => setNewRuleCondition(e.target.value)} placeholder="e.g., event.type == 'failed_login'" className="col-span-3" required/>
                                 </div>
                                  <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="severity" className="text-right">Severity</Label>
-                                     <Select onValueChange={setNewRuleSeverity}>
+                                     <Select onValueChange={setNewRuleSeverity} required>
                                         <SelectTrigger className="col-span-3">
                                             <SelectValue placeholder="Select severity" />
                                         </SelectTrigger>
@@ -143,6 +135,9 @@ export default function AlertsPage() {
                                 </div>
                             </div>
                             <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="outline">Cancel</Button>
+                                </DialogClose>
                                 <Button type="submit">Create Rule</Button>
                             </DialogFooter>
                         </form>
@@ -180,12 +175,12 @@ export default function AlertsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center space-x-2">
-                                            <Switch id={`status-${rule.id}`} checked={rule.enabled} onCheckedChange={() => handleToggleRule(rule)}/>
+                                            <Switch id={`status-${rule.id}`} checked={rule.enabled} onCheckedChange={() => handleToggleRule(rule.id)}/>
                                             <Label htmlFor={`status-${rule.id}`}>{rule.enabled ? 'Enabled' : 'Disabled'}</Label>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon">
+                                        <Button variant="ghost" size="icon" disabled>
                                             <Edit className="h-4 w-4" />
                                         </Button>
                                     </TableCell>

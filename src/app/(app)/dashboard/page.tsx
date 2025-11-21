@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -28,6 +27,7 @@ import {
   dashboardStats,
   eventsByType as staticEvents,
   systemStatus as staticSystemStatus,
+  recentAlerts as staticRecentAlerts,
 } from '@/lib/data';
 import {
   ChartContainer,
@@ -35,9 +35,6 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, LabelList } from 'recharts';
-import { useUserId } from '@/hooks/use-user-id';
-import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import type { Alert, SystemStatus } from '@/lib/types';
 
 
@@ -68,31 +65,7 @@ function getStatusIndicator(status: string) {
 }
 
 export default function DashboardPage() {
-  const userId = useUserId();
-  const firestore = useFirestore();
-  const [recentAlerts, setRecentAlerts] = useState<Alert[]>([]);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus[]>(staticSystemStatus);
-  const [eventsByType, setEventsByType] = useState(staticEvents);
-
-  useEffect(() => {
-    if (!userId || !firestore) return;
-
-    const alertsQuery = query(
-        collection(firestore, 'users', userId, 'alerts'),
-        orderBy('timestamp', 'desc'),
-        limit(5)
-    );
-
-    const unsubscribe = onSnapshot(alertsQuery, (snapshot) => {
-        const alertsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Alert));
-        setRecentAlerts(alertsData);
-    }, (error) => {
-        console.error("Error fetching alerts:", error);
-    });
-
-    return () => unsubscribe();
-  }, [userId, firestore]);
-
+  const recentAlerts = staticRecentAlerts.map((alert, index) => ({...alert, id: `alert-${index}`}));
 
   return (
     <div className="flex flex-col gap-4">
@@ -126,7 +99,7 @@ export default function DashboardPage() {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{recentAlerts.length > 0 ? recentAlerts.length : dashboardStats.alertsTriggered}</div>
+            <div className="text-2xl font-bold">{recentAlerts.length}</div>
             <p className="text-xs text-muted-foreground">in the last 24h</p>
           </CardContent>
         </Card>
@@ -194,7 +167,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={{}} className="h-[250px] w-full">
-              <BarChart data={eventsByType} layout="vertical" margin={{ left: 10, right: 30 }}>
+              <BarChart data={staticEvents} layout="vertical" margin={{ left: 10, right: 30 }}>
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
@@ -216,7 +189,7 @@ export default function DashboardPage() {
                 <CardDescription>Real-time status of monitored systems.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {systemStatus.map((system) => (
+                {staticSystemStatus.map((system) => (
                     <div key={system.name} className="flex items-center gap-3">
                          <div className={`h-3 w-3 rounded-full ${getStatusIndicator(system.status)}`}></div>
                          <div>

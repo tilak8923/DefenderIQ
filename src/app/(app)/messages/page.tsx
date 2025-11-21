@@ -7,74 +7,91 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Search, Send, UserPlus, X } from "lucide-react";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, addDoc, serverTimestamp, doc, getDoc, updateDoc, orderBy, getDocs, limit } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import type { UserProfile, Conversation, Message } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
 
-// Helper to get initials from a name
 const getInitials = (name?: string) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 };
 
+const dummyOtherUser: UserProfile = {
+    id: 'dummy-user-123',
+    username: 'Jane Doe',
+    email: 'jane.doe@example.com',
+    photoURL: 'https://i.pravatar.cc/150?u=jane_doe'
+};
+
+const dummyConversation: Conversation = {
+    id: 'convo-1',
+    participants: ['current-user-placeholder', dummyOtherUser.id],
+    participantDetails: [dummyOtherUser], // Current user will be added later
+    lastMessage: 'Sounds good, talk to you then!',
+    lastMessageTimestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+};
+
+const dummyMessages: Message[] = [
+    { id: 'msg-1', senderId: dummyOtherUser.id, text: 'Hey, did you see the latest security bulletin?', timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
+    { id: 'msg-2', senderId: 'current-user-placeholder', text: 'Not yet, was it critical?', timestamp: new Date(Date.now() - 9 * 60 * 1000).toISOString() },
+    { id: 'msg-3', senderId: dummyOtherUser.id, text: 'Yeah, there is a new RCE vulnerability in the web framework we use. We should patch it ASAP.', timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString() },
+    { id: 'msg-4', senderId: 'current-user-placeholder', text: 'Wow, okay. I will get on it right away. I am scheduling the maintenance window now.', timestamp: new Date(Date.now() - 7 * 60 * 1000).toISOString() },
+    { id: 'msg-5', senderId: dummyOtherUser.id, text: 'Sounds good, talk to you then!', timestamp: new Date(Date.now() - 6 * 60 * 1000).toISOString() },
+];
+
 type SearchedUserState = UserProfile | 'not_found' | null;
 
 export default function MessagesPage() {
     const { user: currentUser } = useUser();
-    const firestore = useFirestore();
-
+    
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+    const [userConversations, setUserConversations] = useState<Conversation[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    
     const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
     const [newMessage, setNewMessage] = useState('');
     
-    // State for the new search/invite flow
     const [isSearching, setIsSearching] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
     const [searchedUser, setSearchedUser] = useState<SearchedUserState>(null);
     const [isSearchLoading, setIsSearchLoading] = useState(false);
 
-
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
-    // --- Data Fetching ---
-    // Fetch all users - still needed for populating participant details
-    const usersQuery = useMemoFirebase(() =>
-        firestore ? query(collection(firestore, 'users')) : null,
-    [firestore]);
-    const { data: allUsersData } = useCollection<UserProfile>(usersQuery);
-    const allUsers = useMemo(() => allUsersData || [], [allUsersData]);
+    // Initialize with dummy data when currentUser is available
+    useEffect(() => {
+        if (currentUser) {
+            const currentUserProfile: UserProfile = {
+                id: currentUser.uid,
+                username: currentUser.displayName || 'Current User',
+                email: currentUser.email || undefined,
+                photoURL: currentUser.photoURL || undefined
+            };
+            
+            const populatedConvo: Conversation = {
+                ...dummyConversation,
+                participants: [currentUser.uid, dummyOtherUser.id],
+                participantDetails: [currentUserProfile, dummyOtherUser]
+            };
 
+            const populatedMessages = dummyMessages.map(m => ({
+                ...m,
+                senderId: m.senderId === 'current-user-placeholder' ? currentUser.uid : m.senderId
+            }));
 
-    // Fetch conversations the current user is part of
-    const conversationsQuery = useMemoFirebase(() =>
-        currentUser && firestore ? query(collection(firestore, 'conversations'), where('participants', 'array-contains', currentUser.uid), orderBy('lastMessageTimestamp', 'desc')) : null,
-    [currentUser, firestore]);
-    const { data: userConversations } = useCollection<Omit<Conversation, 'id' | 'participantDetails'>>(conversationsQuery);
+            setAllUsers([currentUserProfile, dummyOtherUser]);
+            setUserConversations([populatedConvo]);
+            setActiveConversation(populatedConvo);
+            setMessages(populatedMessages);
+        }
+    }, [currentUser]);
 
-    // Fetch messages for the active conversation
-    const messagesQuery = useMemoFirebase(() =>
-        activeConversation && firestore ? query(collection(firestore, 'conversations', activeConversation.id, 'messages'), orderBy('timestamp', 'asc')) : null,
-    [activeConversation, firestore]);
-    const { data: messages } = useCollection<Message>(messagesQuery);
-    
-    // --- Memos & Effects ---
-    // Combine conversation data with participant details
-    const conversationsWithDetails = useMemo<Conversation[]>(() => {
-        if (!userConversations || !allUsers.length) return [];
-        return userConversations.map(convo => {
-            const participantDetails = (convo.participants || [])
-                .map(pId => allUsers.find(u => u.id === pId))
-                .filter((p): p is UserProfile => !!p);
-            return { ...convo, participantDetails };
-        });
-    }, [userConversations, allUsers]);
-
-    // Scroll to the bottom of the messages when new messages arrive
-     useEffect(() => {
+    // Scroll to bottom effect
+    useEffect(() => {
         endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
 
-    // --- Handlers ---
     const handleSelectConversation = (conversation: Conversation) => {
         setActiveConversation(conversation);
         setIsSearching(false);
@@ -82,68 +99,49 @@ export default function MessagesPage() {
 
     const handleSearchUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!searchEmail.trim() || !firestore) return;
+        if (!searchEmail.trim()) return;
 
         setIsSearchLoading(true);
         setSearchedUser(null);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-        const usersRef = collection(firestore, 'users');
-        const q = query(usersRef, where('email', '==', searchEmail.toLowerCase()), limit(1));
-        
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-            setSearchedUser('not_found');
+        if (searchEmail.toLowerCase() === dummyOtherUser.email) {
+            setSearchedUser(dummyOtherUser);
         } else {
-            const userDoc = querySnapshot.docs[0];
-            setSearchedUser({ id: userDoc.id, ...userDoc.data() } as UserProfile);
+            setSearchedUser('not_found');
         }
         setIsSearchLoading(false);
     };
     
-    const handleStartConversation = async (otherUser: UserProfile) => {
-        if (!currentUser || !firestore) return;
-        
-        // Check if a conversation already exists
-        const existingConvo = conversationsWithDetails.find(c => c.participants.length === 2 && c.participants.includes(otherUser.id));
+    const handleStartConversation = (otherUser: UserProfile) => {
+        const existingConvo = userConversations.find(c => c.participants.length === 2 && c.participants.includes(otherUser.id));
         if (existingConvo) {
             setActiveConversation(existingConvo);
-            setIsSearching(false);
-            return;
+        } else {
+             // This part is for demo only, in a real app you'd create a new conversation document
+             alert("Starting a new conversation is disabled in this demo.");
         }
-
-        // Create a new conversation
-        const newConversationRef = await addDoc(collection(firestore, 'conversations'), {
-            participants: [currentUser.uid, otherUser.id],
-            lastMessage: `Started conversation with ${otherUser.username || otherUser.email}`,
-            lastMessageTimestamp: serverTimestamp(),
-        });
-        
-        const newConvoDoc = await getDoc(newConversationRef);
-        const newConvoData = { id: newConvoDoc.id, ...newConvoDoc.data(), participantDetails: [currentUser, otherUser] } as Conversation;
-
-        setActiveConversation(newConvoData);
         setIsSearching(false);
     };
 
-    const handleSendMessage = async (e: React.FormEvent) => {
+    const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !activeConversation || !currentUser || !firestore) return;
+        if (!newMessage.trim() || !activeConversation || !currentUser) return;
 
-        const messagesCol = collection(firestore, 'conversations', activeConversation.id, 'messages');
-        await addDoc(messagesCol, {
+        const newMsg: Message = {
+            id: uuidv4(),
             senderId: currentUser.uid,
             text: newMessage,
-            timestamp: serverTimestamp(),
-        });
+            timestamp: new Date().toISOString()
+        };
 
-        // Update the last message on the conversation
-        const convoRef = doc(firestore, 'conversations', activeConversation.id);
-        await updateDoc(convoRef, {
-            lastMessage: newMessage,
-            lastMessageTimestamp: serverTimestamp(),
-        });
+        setMessages(currentMessages => [...currentMessages, newMsg]);
         
+        // Also update the last message on the conversation list for UI feedback
+        setUserConversations(convos => convos.map(c => 
+            c.id === activeConversation.id ? { ...c, lastMessage: newMessage } : c
+        ));
+
         setNewMessage('');
     };
 
@@ -213,11 +211,10 @@ export default function MessagesPage() {
 
                         </div>
                     ) : (
-                        // Conversation List
                         <div>
-                            {conversationsWithDetails.map((convo) => {
+                            {userConversations.map((convo) => {
                                 const otherUser = getOtherParticipant(convo);
-                                if (!otherUser) return null; // Don't render self-chats or broken convos
+                                if (!otherUser) return null;
                                 return (
                                     <div key={convo.id} onClick={() => handleSelectConversation(convo)} className={cn("flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50", activeConversation?.id === convo.id && 'bg-muted')}>
                                         <Avatar>
