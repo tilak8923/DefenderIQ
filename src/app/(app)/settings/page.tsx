@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Upload } from 'lucide-react';
+import { Moon, Sun, Edit } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
@@ -190,30 +191,44 @@ export default function SettingsPage() {
                     <CardDescription>Manage your personal account information.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-24 w-24">
-                            <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                        </Avatar>
+                    <div className="flex items-center gap-6">
+                        <div className="relative group">
+                            <Avatar className="h-24 w-24">
+                                <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                            </Avatar>
+                            <button 
+                                onClick={handleFileSelect}
+                                disabled={isUpdatingPhoto}
+                                className={cn(
+                                    "absolute inset-0 bg-black/50 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity",
+                                    isUpdatingPhoto && "opacity-100 cursor-not-allowed"
+                                )}
+                            >
+                                {isUpdatingPhoto ? (
+                                    <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <Edit className="h-6 w-6 text-white" />
+                                )}
+                                
+                            </button>
+                            <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                        </div>
                         <div>
                             <h2 className="text-xl font-semibold">{user.displayName || 'Anonymous User'}</h2>
                             <p className="text-muted-foreground">{user.email}</p>
+                             <div className="text-xs text-muted-foreground mt-2">
+                                <span className="font-semibold">User ID:</span>
+                                <span className="font-mono ml-2 select-all">{user.uid}</span>
+                             </div>
                         </div>
                     </div>
-                     <div className="space-y-4">
-                        <Label>Profile Picture</Label>
-                        <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                        <Button onClick={handleFileSelect} disabled={isUpdatingPhoto}>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload Image
-                        </Button>
-                        {isUpdatingPhoto && (
-                            <div className="space-y-1">
-                                <p className="text-sm text-muted-foreground">Uploading...</p>
-                                <Progress value={uploadProgress} className="w-full" />
-                            </div>
-                        )}
-                    </div>
+                     {isUpdatingPhoto && (
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">Uploading...</p>
+                            <Progress value={uploadProgress} className="w-full" />
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -281,4 +296,5 @@ export default function SettingsPage() {
         </div>
     </div>
   );
-}
+
+    
