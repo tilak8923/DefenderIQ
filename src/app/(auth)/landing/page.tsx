@@ -12,6 +12,7 @@ import {
 import { ChevronDown, BarChart, Terminal, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTheme } from 'next-themes';
 
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a href={href} className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">
@@ -22,13 +23,19 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 export default function LandingPage() {
   const [platformOpen, setPlatformOpen] = useState(false);
   const [solutionOpen, setSolutionOpen] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white font-body">
       <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-black/80 backdrop-blur-sm">
         <div className="container mx-auto h-16 flex items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="DefendIQ Logo" width={24} height={24} />
+            <Image 
+              src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
+              alt="DefendIQ Logo" 
+              width={24} 
+              height={24} 
+            />
             <span className="font-bold text-lg tracking-wider">DefendIQ</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
@@ -204,5 +211,3 @@ if (alert.matches(PhishingAttempt)) {
     </div>
   );
 }
-
-    

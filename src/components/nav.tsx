@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogOut, Settings, MessageSquare, UserCog, FileText } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { useAuth, useTheme } from '@/firebase';
 import { signOutUser } from '@/firebase/non-blocking-login';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -37,13 +37,19 @@ const rightNavItems = [
 export function MainNav() {
   const pathname = usePathname();
   const auth = useAuth();
+  const { theme } = useTheme();
 
   return (
     <TooltipProvider>
       <header className="sticky top-0 z-50 flex flex-col border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="DefendIQ Logo" width={32} height={32} />
+            <Image 
+              src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
+              alt="DefendIQ Logo" 
+              width={32} 
+              height={32} 
+            />
             <h1 className="text-xl font-bold tracking-widest">DefendIQ</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -102,5 +108,3 @@ export function MainNav() {
     </TooltipProvider>
   );
 }
-
-    

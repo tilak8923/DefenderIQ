@@ -5,6 +5,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { useTheme as useNextTheme } from 'next-themes';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -30,6 +31,8 @@ export interface FirebaseContextState {
   user: User | null;
   isUserLoading: boolean; // True during initial auth check
   userError: Error | null; // Error from auth listener
+  theme: string | undefined;
+  setTheme: (theme: string) => void;
 }
 
 // Return type for useFirebase()
@@ -40,6 +43,8 @@ export interface FirebaseServicesAndUser {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
+  theme: string | undefined;
+  setTheme: (theme: string) => void;
 }
 
 // Return type for useUser() - specific to user auth state
@@ -66,6 +71,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     isUserLoading: true, // Start loading until first auth event
     userError: null,
   });
+  const { theme, setTheme } = useNextTheme();
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
@@ -100,8 +106,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
       userError: userAuthState.userError,
+      theme,
+      setTheme,
     };
-  }, [firebaseApp, firestore, auth, userAuthState]);
+  }, [firebaseApp, firestore, auth, userAuthState, theme, setTheme]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -133,6 +141,8 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,
+    theme: context.theme,
+    setTheme: context.setTheme,
   };
 };
 
@@ -153,6 +163,12 @@ export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
   return firebaseApp;
 };
+
+/** Hook to access Theme and SetTheme. */
+export const useTheme = (): { theme: string | undefined, setTheme: (theme: string) => void } => {
+  const { theme, setTheme } = useFirebase();
+  return { theme, setTheme };
+}
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 
