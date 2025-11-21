@@ -102,8 +102,8 @@ export default function SignupPage() {
                             <Image 
                                 src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
                                 alt="DefendIQ Logo" 
-                                width={20} 
-                                height={20} 
+                                width={45} 
+                                height={45} 
                             />
                          )}
                     </Link>
@@ -185,3 +185,5 @@ export default function SignupPage() {
         </div>
     );
 }
+
+    

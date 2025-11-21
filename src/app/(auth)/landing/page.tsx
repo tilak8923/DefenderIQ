@@ -39,8 +39,8 @@ export default function LandingPage() {
               <Image 
                 src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
                 alt="DefendIQ Logo" 
-                width={32} 
-                height={32} 
+                width={45} 
+                height={45} 
               />
             )}
             <span className="font-bold text-lg tracking-wider">DefendIQ</span>
@@ -218,5 +218,7 @@ if (alert.matches(PhishingAttempt)) {
     </div>
   );
 }
+
+    
 
     

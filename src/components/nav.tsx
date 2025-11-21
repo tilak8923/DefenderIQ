@@ -55,8 +55,8 @@ export function MainNav() {
                 <Image 
                   src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
                   alt="DefendIQ Logo" 
-                  width={32} 
-                  height={32} 
+                  width={45} 
+                  height={45} 
                 />
             )}
             <h1 className="text-xl font-bold tracking-widest">DefendIQ</h1>
@@ -117,3 +117,5 @@ export function MainNav() {
     </TooltipProvider>
   );
 }
+
+    
