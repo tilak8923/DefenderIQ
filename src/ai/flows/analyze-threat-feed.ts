@@ -3,7 +3,7 @@
 /**
  * @fileOverview Integrates threat intelligence feeds and uses LLM reasoning to identify potential threats in real-time.
  *
- * - analyzeThreatFeedFlow - A function that analyzes threat feed entries.
+ * - analyzeThreatFeed - A function that analyzes threat feed entries.
  * - AnalyzeThreatFeedInput - The input type for the analyzeThreatFeed function.
  * - AnalyzeThreatFeedOutput - The return type for the analyzeThreatFeed function.
  */
@@ -26,6 +26,9 @@ export const AnalyzeThreatFeedOutputSchema = z.object({
 });
 export type AnalyzeThreatFeedOutput = z.infer<typeof AnalyzeThreatFeedOutputSchema>;
 
+export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
+  return analyzeThreatFeedFlow(input);
+}
 
 const prompt = ai.definePrompt({
   name: 'analyzeThreatFeedPrompt',
@@ -47,7 +50,7 @@ Based on your analysis, determine:
 Ensure your output is valid JSON.`,
 });
 
-export const analyzeThreatFeedFlow = ai.defineFlow(
+const analyzeThreatFeedFlow = ai.defineFlow(
   {
     name: 'analyzeThreatFeedFlow',
     inputSchema: AnalyzeThreatFeedInputSchema,

@@ -26,6 +26,10 @@ export const RunLogAnalysisOutputSchema = z.object({
 });
 export type RunLogAnalysisOutput = z.infer<typeof RunLogAnalysisOutputSchema>;
 
+export async function runLogAnalysis(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
+    return runLogAnalysisFlow(input);
+}
+
 
 // Define the prompt for the AI model
 const logAnalysisPrompt = ai.definePrompt({
@@ -60,7 +64,7 @@ Analyze the log entry based *only* on the provided rule.
 });
 
 // The main Genkit flow
-export const runLogAnalysisFlow = ai.defineFlow(
+const runLogAnalysisFlow = ai.defineFlow(
   {
     name: 'runLogAnalysisFlow',
     inputSchema: RunLogAnalysisInputSchema,

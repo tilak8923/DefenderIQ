@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { runFlow } from '@genkit-ai/next/client';
 import { useUserId } from '@/hooks/use-user-id';
-import type { RunLogAnalysisOutput } from '@/ai/flows/run-log-analysis';
+import { runLogAnalysis, type RunLogAnalysisOutput } from '@/ai/flows/run-log-analysis';
 
 export default function AnalysisPage() {
   const [output, setOutput] = useState<RunLogAnalysisOutput | null>(null);
@@ -36,7 +36,7 @@ export default function AnalysisPage() {
     setOutput(null);
 
     try {
-        const result = await runFlow<RunLogAnalysisOutput>('runLogAnalysisFlow', { userId });
+        const result = await runFlow(runLogAnalysis, { userId });
         setOutput(result);
         if (result.alertsCreated > 0) {
           toast({

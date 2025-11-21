@@ -30,6 +30,10 @@ export const GenerateSecurityReportOutputSchema = z.object({
 });
 export type GenerateSecurityReportOutput = z.infer<typeof GenerateSecurityReportOutputSchema>;
 
+export async function generateSecurityReport(input: GenerateSecurityReportInput): Promise<GenerateSecurityReportOutput> {
+    return generateSecurityReportFlow(input);
+}
+
 const prompt = ai.definePrompt({
   name: 'generateSecurityReportPrompt',
   input: {schema: GenerateSecurityReportInputSchema},
@@ -72,7 +76,7 @@ Suggest specific, actionable steps to mitigate the identified risks. Prioritize 
 `,
 });
 
-export const generateSecurityReportFlow = ai.defineFlow(
+const generateSecurityReportFlow = ai.defineFlow(
   {
     name: 'generateSecurityReportFlow',
     inputSchema: GenerateSecurityReportInputSchema,

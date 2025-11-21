@@ -3,5 +3,4 @@ import './analyze-threat-feed';
 import './app-cli';
 import './generate-security-report';
 import './parse-log-entries';
-import './provide-command-line-assistance';
 import './run-log-analysis';

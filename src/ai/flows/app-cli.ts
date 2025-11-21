@@ -7,7 +7,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit/zod';
 import { runFlow } from '@genkit-ai/next/client';
-import type { GenerateSecurityReportOutput } from './generate-security-report';
+import { generateSecurityReport, type GenerateSecurityReportOutput } from './generate-security-report';
 import { recentAlerts } from '@/lib/data';
 
 // Tool to list recent security alerts
@@ -57,7 +57,7 @@ const generateReportTool = ai.defineTool(
     };
     const dateRange = range ? dateRangeMap[range] : 'Last 7 days';
 
-    const report = await runFlow<GenerateSecurityReportOutput>('generateSecurityReportFlow', {
+    const report = await runFlow(generateSecurityReport, {
       reportTitle: title,
       dateRange: dateRange,
       selectedParameters: ['Number of alerts', 'Types of threats detected', 'System vulnerabilities'],
@@ -98,6 +98,10 @@ export const AppCliOutputSchema = z.object({
   response: z.string().describe('The output from the command execution, formatted for the terminal.'),
 });
 export type AppCliOutput = z.infer<typeof AppCliOutputSchema>;
+
+export async function appCli(input: AppCliInput): Promise<AppCliOutput> {
+    return appCliFlow(input);
+}
 
 export const appCliFlow = ai.defineFlow(
   {
