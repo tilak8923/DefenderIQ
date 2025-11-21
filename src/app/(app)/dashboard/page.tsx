@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -24,7 +25,7 @@ import {
   FileWarning,
 } from 'lucide-react';
 import {
-  dashboardStats,
+  dashboardStats as staticDashboardStats,
   eventsByType as staticEvents,
   systemStatus as staticSystemStatus,
   recentAlerts as staticRecentAlerts,
@@ -65,7 +66,48 @@ function getStatusIndicator(status: string) {
 }
 
 export default function DashboardPage() {
+  const [dashboardStats, setDashboardStats] = useState(staticDashboardStats);
+  const [eventsByType, setEventsByType] = useState(staticEvents);
+  const [systemStatus, setSystemStatus] = useState(staticSystemStatus);
   const recentAlerts = staticRecentAlerts.map((alert, index) => ({...alert, id: `alert-${index}`}));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Update stats
+      setDashboardStats(prevStats => ({
+        ...prevStats,
+        threatLevel: Math.max(20, Math.min(100, prevStats.threatLevel + Math.floor(Math.random() * 10) - 5)),
+        alertsTriggered: prevStats.alertsTriggered + Math.floor(Math.random() * 2),
+      }));
+
+      // Update events chart
+      setEventsByType(prevEvents => prevEvents.map(event => ({
+        ...event,
+        value: Math.max(10, event.value + Math.floor(Math.random() * 20) - 10),
+      })));
+
+      // Update system status
+      setSystemStatus(prevStatus => {
+        const randomIndex = Math.floor(Math.random() * prevStatus.length);
+        return prevStatus.map((system, index) => {
+          if (index === randomIndex && Math.random() > 0.7) {
+            const statuses = ['Operational', 'Degraded', 'Offline'];
+            const currentStatusIndex = statuses.indexOf(system.status);
+            const nextStatusIndex = (currentStatusIndex + 1) % statuses.length;
+            return { ...system, status: statuses[nextStatusIndex] };
+          }
+          // Occasionally, a system might recover
+          if (system.status !== 'Operational' && Math.random() > 0.9) {
+            return { ...system, status: 'Operational' };
+          }
+          return system;
+        });
+      });
+
+    }, 3000); // Update every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -99,7 +141,7 @@ export default function DashboardPage() {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{recentAlerts.length}</div>
+            <div className="text-2xl font-bold">{dashboardStats.alertsTriggered}</div>
             <p className="text-xs text-muted-foreground">in the last 24h</p>
           </CardContent>
         </Card>
@@ -119,7 +161,7 @@ export default function DashboardPage() {
             <ServerCrash className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats.systemsAffected}</div>
+            <div className="text-2xl font-bold">{systemStatus.filter(s => s.status !== 'Operational').length}</div>
             <p className="text-xs text-muted-foreground">currently impacted</p>
           </CardContent>
         </Card>
@@ -167,7 +209,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={{}} className="h-[250px] w-full">
-              <BarChart data={staticEvents} layout="vertical" margin={{ left: 10, right: 30 }}>
+              <BarChart data={eventsByType} layout="vertical" margin={{ left: 10, right: 30 }}>
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
@@ -189,7 +231,7 @@ export default function DashboardPage() {
                 <CardDescription>Real-time status of monitored systems.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {staticSystemStatus.map((system) => (
+                {systemStatus.map((system) => (
                     <div key={system.name} className="flex items-center gap-3">
                          <div className={`h-3 w-3 rounded-full ${getStatusIndicator(system.status)}`}></div>
                          <div>
