@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { analyzeThreatFeed } from '@/ai/flows/analyze-threat-feed';
 import type { AnalyzeThreatFeedOutput } from '@/ai/flows/analyze-threat-feed';
+import { runFlow } from '@genkit-ai/next/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,7 +33,7 @@ export default function ThreatIntelPage() {
         const vulnerabilitiesArray = knownVulnerabilities.split('\n').filter(v => v.trim() !== '');
         
         try {
-            const result = await analyzeThreatFeed({
+            const result = await runFlow<AnalyzeThreatFeedOutput>('analyzeThreatFeedFlow', {
                 feedEntry,
                 knownVulnerabilities: vulnerabilitiesArray,
             });

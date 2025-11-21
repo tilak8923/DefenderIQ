@@ -30,10 +30,14 @@ const GenerateSecurityReportOutputSchema = z.object({
 });
 export type GenerateSecurityReportOutput = z.infer<typeof GenerateSecurityReportOutputSchema>;
 
+// This is just a wrapper, the actual flow is defined below.
 export async function generateSecurityReport(
   input: GenerateSecurityReportInput
 ): Promise<GenerateSecurityReportOutput> {
-  return generateSecurityReportFlow(input);
+  const flow = ai.getFlow('generateSecurityReportFlow');
+  if (!flow) throw new Error('generateSecurityReportFlow not found');
+  const result = await flow(input);
+  return result;
 }
 
 const prompt = ai.definePrompt({
@@ -78,7 +82,7 @@ Suggest specific, actionable steps to mitigate the identified risks. Prioritize 
 `,
 });
 
-const generateSecurityReportFlow = ai.defineFlow(
+ai.defineFlow(
   {
     name: 'generateSecurityReportFlow',
     inputSchema: GenerateSecurityReportInputSchema,

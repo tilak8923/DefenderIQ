@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { appCli } from '@/ai/flows/app-cli';
 import { cn } from '@/lib/utils';
+import { runFlow } from '@genkit-ai/next/client';
+import type { AppCliOutput } from '@/ai/flows/app-cli';
+
 
 interface HistoryItem {
   type: 'command' | 'response';
@@ -49,7 +51,7 @@ export function TerminalUI() {
     setRunning(true);
     
     try {
-      const result = await appCli({ command: input });
+      const result = await runFlow<AppCliOutput>('appCliFlow', { command: input });
       if (result) {
         setHistory((prev) => [...prev, { type: 'response', content: result.response }]);
       }

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { generateSecurityReport } from '@/ai/flows/generate-security-report';
 import type { GenerateSecurityReportOutput } from '@/ai/flows/generate-security-report';
+import { runFlow } from '@genkit-ai/next/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -51,7 +51,7 @@ export default function ReportsPage() {
     }).filter(Boolean);
 
     try {
-        const result = await generateSecurityReport({
+        const result = await runFlow<GenerateSecurityReportOutput>('generateSecurityReportFlow', {
             reportTitle,
             dateRange,
             selectedParameters: selectedLabels,

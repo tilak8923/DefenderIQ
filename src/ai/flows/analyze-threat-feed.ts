@@ -28,8 +28,12 @@ const AnalyzeThreatFeedOutputSchema = z.object({
 });
 export type AnalyzeThreatFeedOutput = z.infer<typeof AnalyzeThreatFeedOutputSchema>;
 
+// This is just a wrapper, the actual flow is defined below
 export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
-  return analyzeThreatFeedFlow(input);
+  const flow = ai.getFlow('analyzeThreatFeedFlow');
+  if (!flow) throw new Error('analyzeThreatFeedFlow not found');
+  const result = await flow(input);
+  return result;
 }
 
 const prompt = ai.definePrompt({
@@ -52,7 +56,7 @@ Based on your analysis, determine:
 Ensure your output is valid JSON.`,
 });
 
-const analyzeThreatFeedFlow = ai.defineFlow(
+ai.defineFlow(
   {
     name: 'analyzeThreatFeedFlow',
     inputSchema: AnalyzeThreatFeedInputSchema,
