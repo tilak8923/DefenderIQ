@@ -91,15 +91,15 @@ export default function LandingPage() {
                         <p className="mt-4 text-neutral-300">
                             Our architecture is designed for scalability and speed, integrating seamlessly with your existing infrastructure. We combine the core functions of SIEM and SOAR into a single, powerful engine.
                         </p>
-                        <ul className="mt-6 space-y-4">
-                            <li className="flex items-start gap-3">
+                        <ul className="mt-6 space-y-2">
+                            <li className="flex items-start gap-3 p-4 rounded-lg hover:bg-neutral-900 transition-colors">
                                 <ShieldCheck className="h-6 w-6 mt-1 text-white flex-shrink-0" />
                                 <div>
                                     <h3 className="font-semibold">Detection & Response</h3>
                                     <p className="text-sm text-neutral-400">Leverage rule-based correlation and AI-powered anomaly detection to identify threats, then automate responses with customizable playbooks.</p>
                                 </div>
                             </li>
-                             <li className="flex items-start gap-3">
+                             <li className="flex items-start gap-3 p-4 rounded-lg hover:bg-neutral-900 transition-colors">
                                 <BarChart className="h-6 w-6 mt-1 text-white flex-shrink-0" />
                                 <div>
                                     <h3 className="font-semibold">Data Normalization</h3>
@@ -138,17 +138,17 @@ if (alert.matches(PhishingAttempt)) {
                     From log collection to incident response, TSIEM provides the tools you need to secure your organization.
                 </p>
                 <div className="grid md:grid-cols-3 gap-8 mt-12">
-                    <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900">
+                    <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900 hover:bg-neutral-800 hover:border-neutral-700 transition-all">
                         <BarChart className="h-8 w-8 mx-auto text-white" />
                         <h3 className="mt-4 text-lg font-semibold">Real-time Dashboard</h3>
                         <p className="mt-2 text-sm text-neutral-400">Visualize your security posture at a glance with customizable widgets for alerts, threats, and system status.</p>
                     </div>
-                     <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900">
+                     <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900 hover:bg-neutral-800 hover:border-neutral-700 transition-all">
                         <Terminal className="h-8 w-8 mx-auto text-white" />
                         <h3 className="mt-4 text-lg font-semibold">Advanced Log Analysis</h3>
                         <p className="mt-2 text-sm text-neutral-400">Search, filter, and analyze billions of log events in seconds. Use our AI to parse and structure any log format.</p>
                     </div>
-                     <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900">
+                     <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900 hover:bg-neutral-800 hover:border-neutral-700 transition-all">
                         <ShieldCheck className="h-8 w-8 mx-auto text-white" />
                         <h3 className="mt-4 text-lg font-semibold">Automated Response</h3>
                         <p className="mt-2 text-sm text-neutral-400">Build powerful automation playbooks to handle incidents, enrich data, and contain threats without manual intervention.</p>
