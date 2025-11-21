@@ -43,7 +43,7 @@ export default function LandingPage() {
               <DropdownMenuContent
                 onMouseEnter={() => setPlatformOpen(true)}
                 onMouseLeave={() => setPlatformOpen(false)}
-                className="bg-neutral-900 border-neutral-800 text-white animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
+                className="bg-neutral-900 border-neutral-800 text-white data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
               >
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <a href="#overview">Overview</a>
@@ -64,7 +64,7 @@ export default function LandingPage() {
               <DropdownMenuContent
                 onMouseEnter={() => setSolutionOpen(true)}
                 onMouseLeave={() => setSolutionOpen(false)}
-                className="bg-neutral-900 border-neutral-800 text-white animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
+                className="bg-neutral-900 border-neutral-800 text-white data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2"
               >
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <a href="#features">Features</a>
