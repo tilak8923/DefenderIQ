@@ -1,5 +1,7 @@
+
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Shield, ChevronDown, BarChart, Terminal, ShieldCheck } from 'lucide-react';
@@ -12,6 +14,9 @@ const NavLink = ({ href, children }: { href: string, children: React.ReactNode }
 );
 
 export default function LandingPage() {
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [solutionOpen, setSolutionOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white font-body">
       <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-black/80 backdrop-blur-sm">
@@ -22,11 +27,19 @@ export default function LandingPage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <NavLink href="#about">About</NavLink>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none">
+            <DropdownMenu open={platformOpen} onOpenChange={setPlatformOpen}>
+              <DropdownMenuTrigger
+                onMouseEnter={() => setPlatformOpen(true)}
+                onMouseLeave={() => setPlatformOpen(false)}
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
+              >
                 Platform <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-neutral-900 border-neutral-800 text-white">
+              <DropdownMenuContent
+                onMouseEnter={() => setPlatformOpen(true)}
+                onMouseLeave={() => setPlatformOpen(false)}
+                className="bg-neutral-900 border-neutral-800 text-white"
+              >
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <a href="#overview">Overview</a>
                 </DropdownMenuItem>
@@ -35,11 +48,19 @@ export default function LandingPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none">
+            <DropdownMenu open={solutionOpen} onOpenChange={setSolutionOpen}>
+              <DropdownMenuTrigger
+                onMouseEnter={() => setSolutionOpen(true)}
+                onMouseLeave={() => setSolutionOpen(false)}
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
+              >
                 Solution <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-neutral-900 border-neutral-800 text-white">
+              <DropdownMenuContent
+                onMouseEnter={() => setSolutionOpen(true)}
+                onMouseLeave={() => setSolutionOpen(false)}
+                className="bg-neutral-900 border-neutral-800 text-white"
+              >
                  <DropdownMenuItem asChild className="cursor-pointer">
                   <a href="#features">Features</a>
                 </DropdownMenuItem>
