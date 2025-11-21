@@ -10,13 +10,13 @@ interface HistoryItem {
 }
 
 const asciiBanner = `
-████████╗███████╗██╗███████╗███╗   ███╗
-╚══██╔══╝██╔════╝██║██╔════╝████╗ ████║
-   ██║   ███████╗██║█████╗  ██╔████╔██║
-   ██║   ╚════██║██║██╔══╝  ██║╚██╔╝██║
-   ██║   ███████║██║███████╗██║ ╚═╝ ██║
-   ╚═╝   ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝
-          t c y b e r c o d e s p a c e                                                       
+██████╗ ███████╗███████╗███████╗███╗   ██╗██████╗ ████CAG╗
+██╔══██╗██╔════╝██╔════╝██╔════╝████╗  ██║██╔══██╗╚████║
+██║  ██║█████╗  █████╗  █████╗  ██╔██╗ ██║██║  ██║ ██╔═╝
+██║  ██║██╔══╝  ██╔══╝  ██╔══╝  ██║╚██╗██║██║  ██║██╔══╝
+██████╔╝███████╗██║     ███████╗██║ ╚████║██████╔╝██████╗
+╚═════╝ ╚══════╝╚═╝     ╚══════╝╚═╝  ╚═══╝╚═════╝ ╚═════╝
+             d e f e n d i q . c o m                                                    
 `;
 
 export function TerminalUI() {
@@ -29,7 +29,7 @@ export function TerminalUI() {
   useEffect(() => {
     inputRef.current?.focus();
     setHistory([
-        { type: 'response', content: `${asciiBanner}\nWelcome to TSIEM Command Line Interface. Type 'help' for commands.`}
+        { type: 'response', content: `${asciiBanner}\nWelcome to DefendIQ Command Line Interface. Type 'help' for commands.`}
     ]);
   }, []);
   
@@ -109,3 +109,5 @@ export function TerminalUI() {
     </div>
   );
 }
+
+    

@@ -23,7 +23,7 @@ export default function LandingPage() {
         <div className="container mx-auto h-16 flex items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-white" />
-            <span className="font-bold text-lg tracking-wider">TSIEM</span>
+            <span className="font-bold text-lg tracking-wider">DefendIQ</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <NavLink href="#about">About</NavLink>
@@ -31,7 +31,7 @@ export default function LandingPage() {
               <DropdownMenuTrigger
                 onMouseEnter={() => setPlatformOpen(true)}
                 onMouseLeave={() => setPlatformOpen(false)}
-                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
               >
                 Platform <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
@@ -52,7 +52,7 @@ export default function LandingPage() {
               <DropdownMenuTrigger
                 onMouseEnter={() => setSolutionOpen(true)}
                 onMouseLeave={() => setSolutionOpen(false)}
-                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
               >
                 Solution <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
@@ -95,9 +95,9 @@ export default function LandingPage() {
         {/* About Section */}
         <section id="about" className="py-20 md:py-28 bg-neutral-950">
             <div className="container mx-auto px-4 md:px-6">
-                <h2 className="text-3xl md:text-4xl font-bold text-center">About TSIEM</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-center">About DefendIQ</h2>
                 <p className="mx-auto mt-6 max-w-3xl text-center text-neutral-300">
-                    In an era of ever-evolving cyber threats, security teams are overwhelmed with alerts from countless disconnected tools. TSIEM was built to solve this problem. We provide a unified platform that aggregates security data from all your sources, uses AI to detect real threats, and enables rapid, automated response. Our mission is to empower security teams to work smarter, faster, and more effectively.
+                    In an era of ever-evolving cyber threats, security teams are overwhelmed with alerts from countless disconnected tools. DefendIQ was built to solve this problem. We provide a unified platform that aggregates security data from all your sources, uses AI to detect real threats, and enables rapid, automated response. Our mission is to empower security teams to work smarter, faster, and more effectively.
                 </p>
             </div>
         </section>
@@ -156,7 +156,7 @@ if (alert.matches(PhishingAttempt)) {
             <div className="container mx-auto px-4 md:px-6 text-center">
                 <h2 className="text-3xl md:text-4xl font-bold">A Complete Security Solution</h2>
                 <p className="mx-auto mt-4 max-w-2xl text-neutral-300">
-                    From log collection to incident response, TSIEM provides the tools you need to secure your organization.
+                    From log collection to incident response, DefendIQ provides the tools you need to secure your organization.
                 </p>
                 <div className="grid md:grid-cols-3 gap-8 mt-12">
                     <div className="p-8 border border-neutral-800 rounded-lg bg-neutral-900 hover:bg-neutral-800 hover:border-neutral-700 transition-all">
@@ -181,9 +181,11 @@ if (alert.matches(PhishingAttempt)) {
 
       <footer className="border-t border-neutral-800">
         <div className="container mx-auto py-6 px-4 md:px-6 text-center text-sm text-neutral-400">
-            &copy; {new Date().getFullYear()} TSIEM. All rights reserved.
+            &copy; {new Date().getFullYear()} DefendIQ. All rights reserved.
         </div>
       </footer>
     </div>
   );
 }
+
+    

@@ -6,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from 'next-themes';
 
 export const metadata: Metadata = {
-  title: 'TSIEM',
+  title: 'DefendIQ',
   description: 'A cybersecurity monitoring and threat analysis dashboard.',
 };
 
@@ -32,3 +32,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    
