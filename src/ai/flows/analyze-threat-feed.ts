@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'genkit/zod';
 
 export const AnalyzeThreatFeedInputSchema = z.object({
   feedEntry: z.string().describe('A single entry from a threat intelligence feed.'),

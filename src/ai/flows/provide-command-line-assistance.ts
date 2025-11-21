@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'genkit/zod';
 
 export const ProvideCommandLineAssistanceInputSchema = z.object({
   command: z.string().describe('The command to execute.'),

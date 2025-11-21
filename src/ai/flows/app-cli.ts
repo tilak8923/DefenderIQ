@@ -5,7 +5,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit/zod';
 import { runFlow } from '@genkit-ai/next/client';
 import type { GenerateSecurityReportOutput } from './generate-security-report';
 import { recentAlerts } from '@/lib/data';

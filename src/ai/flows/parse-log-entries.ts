@@ -4,7 +4,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit/zod';
 
 // Define the structure of a single log entry, matching lib/types.ts but without the ID.
 const LogEntrySchema = z.object({
@@ -50,7 +50,7 @@ Parse the text and return a JSON object with a single key "parsedLogs" containin
 `,
 });
 
-const parseLogEntriesFlow = ai.defineFlow(
+export const parseLogEntriesFlow = ai.defineFlow(
   {
     name: 'parseLogEntriesFlow',
     inputSchema: ParseLogEntriesInputSchema,
