@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -90,7 +91,7 @@ export default function SignupPage() {
             <div className="absolute top-4 left-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/landing" aria-label="Back to landing page">
-                         <Image src="/logo.png" alt="DefendIQ Logo" width={20} height={20} className="text-primary" />
+                         <Image src="/logo.png" alt="DefendIQ Logo" width={20} height={20} />
                     </Link>
                 </Button>
             </div>
@@ -170,3 +171,5 @@ export default function SignupPage() {
         </div>
     );
 }
+
+    
