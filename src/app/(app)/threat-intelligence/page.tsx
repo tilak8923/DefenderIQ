@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { analyzeThreatFeed, type AnalyzeThreatFeedOutput } from '@/ai/flows/analyze-threat-feed';
-import { runFlow } from '@genkit-ai/next/client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,11 +17,46 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
+interface AnalysisInput {
+    feedEntry: string;
+    knownVulnerabilities: string[];
+}
+
+interface AnalysisOutput {
+  isThreat: boolean;
+  threatSeverity: string;
+  reasoning: string;
+}
+
+// Simplified non-AI analysis
+const analyzeLocalThreatFeed = async (input: AnalysisInput): Promise<AnalysisOutput> => {
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing
+
+    const feed = input.feedEntry.toLowerCase();
+    const vulnerabilities = input.knownVulnerabilities.map(v => v.toLowerCase());
+
+    for (const vuln of vulnerabilities) {
+        if (feed.includes(vuln.split(' ')[0])) { // Check for CVE or keyword
+            return {
+                isThreat: true,
+                threatSeverity: 'High',
+                reasoning: `The feed entry contains a keyword matching the known vulnerability: "${vuln}".`,
+            };
+        }
+    }
+
+    return {
+        isThreat: false,
+        threatSeverity: 'None',
+        reasoning: 'The feed entry does not appear to match any of the provided known vulnerabilities.',
+    };
+};
+
 export default function ThreatIntelPage() {
     const [feedEntry, setFeedEntry] = useState('{"timestamp": "2023-10-27T10:00:00Z", "source_ip": "198.51.100.42", "event_type": "web_request", "details": "GET /wp-admin/install.php"}');
     const [knownVulnerabilities, setKnownVulnerabilities] = useState('CVE-2023-4512 - WordPress Core Vulnerability\nLog4Shell - Apache Log4j Vulnerability');
     
-    const [output, setOutput] = useState<AnalyzeThreatFeedOutput | null>(null);
+    const [output, setOutput] = useState<AnalysisOutput | null>(null);
     const [running, setRunning] = useState(false);
     const { toast } = useToast();
 
@@ -35,7 +68,7 @@ export default function ThreatIntelPage() {
         const vulnerabilitiesArray = knownVulnerabilities.split('\n').filter(v => v.trim() !== '');
         
         try {
-            const result = await runFlow(analyzeThreatFeed, {
+            const result = await analyzeLocalThreatFeed({
                 feedEntry,
                 knownVulnerabilities: vulnerabilitiesArray,
             });
