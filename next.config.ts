@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+require('dotenv').config({ path: './.env' });
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -29,6 +30,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     '6000-firebase-studio-1757076294958.cluster-mwsteha33jfdowtvzffztbjcj6.cloudworkstations.dev',
   ],
+  env: {
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  }
 };
 
 export default nextConfig;
