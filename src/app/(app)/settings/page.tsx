@@ -17,6 +17,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebas
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const ProviderIcon = ({ providerId }: { providerId: string }) => {
@@ -252,35 +253,51 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
-                        <div className="relative group">
-                            <Avatar className="h-24 w-24">
-                                <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                            </Avatar>
-                            <div 
-                                className={cn(
-                                    "absolute inset-0 bg-black/60 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity gap-2",
-                                    isUpdatingPhoto && "opacity-100 cursor-not-allowed"
-                                )}
-                            >
-                                {isUpdatingPhoto ? (
-                                    <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <>
-                                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleFileSelect}>
-                                            <Edit className="h-5 w-5" />
-                                        </Button>
-                                         {user.photoURL && (
-                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleRemoveProfilePicture}>
-                                                <X className="h-5 w-5" />
-                                            </Button>
-                                        )}
-                                    </>
-                                )}
-                                
+                        <TooltipProvider>
+                            <div className="relative group">
+                                <Avatar className="h-24 w-24">
+                                    <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                                </Avatar>
+                                <div 
+                                    className={cn(
+                                        "absolute inset-0 bg-black/60 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity gap-2",
+                                        isUpdatingPhoto && "opacity-100 cursor-not-allowed"
+                                    )}
+                                >
+                                    {isUpdatingPhoto ? (
+                                        <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleFileSelect}>
+                                                        <Edit className="h-5 w-5" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Change</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                             {user.photoURL && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleRemoveProfilePicture}>
+                                                            <X className="h-5 w-5" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Remove</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </>
+                                    )}
+                                    
+                                </div>
+                                <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                             </div>
-                            <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                        </div>
+                        </TooltipProvider>
                         <div>
                             <h2 className="text-xl font-semibold">{user.displayName || 'Anonymous User'}</h2>
                             <p className="text-muted-foreground">{user.email}</p>
