@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, LogOut, Settings, MessageSquare, UserCog } from 'lucide-react';
+import { Shield, LogOut, Settings, MessageSquare, UserCog, FileText } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { signOutUser } from '@/firebase/non-blocking-login';
 import { Button } from './ui/button';
@@ -26,6 +26,7 @@ const navItems = [
 
 const rightNavItems = [
     { href: '/messages', label: 'Messages', icon: MessageSquare },
+    { href: '/docs', label: 'Docs', icon: FileText },
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/administrator', label: 'Administrator', icon: UserCog },
 ];

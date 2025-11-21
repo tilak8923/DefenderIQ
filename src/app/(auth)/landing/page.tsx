@@ -70,7 +70,7 @@ export default function LandingPage() {
           </div>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">About</Link>
-            <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
+            <Link href="/docs" className="text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
             <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">Support</Link>
           </nav>
           <div className="flex flex-1 items-center justify-end">
@@ -86,7 +86,7 @@ export default function LandingPage() {
         <section className="py-20 md:py-32 text-center">
             <div className="container">
                 <h1 
-                    className="text-4xl md:text-6xl font-bold tracking-tighter animate-text-glow"
+                    className="text-4xl md:text-6xl font-bold tracking-tighter"
                 >
                     Unified Security. AI-Powered Clarity.
                 </h1>
@@ -108,7 +108,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-20 bg-muted/40">
+        <section className="py-20 bg-muted">
             <div className="container">
                  <h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Stay Secure</h2>
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -159,7 +159,7 @@ export default function LandingPage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 text-center bg-muted/40">
+        <section className="py-20 text-center bg-muted">
              <div className="container">
                 <h2 className="text-3xl font-bold">Ready to Secure Your Systems?</h2>
                 <p className="text-muted-foreground mt-2 mb-6">Create an account and start exploring the future of security analytics today.</p>
