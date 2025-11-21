@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Courier Prime"', 'monospace'],
-        headline: ['"Courier Prime"', 'monospace'],
+        body: ['Graphik Web', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        headline: ['Means Web', 'Georgia', 'Times', 'Times New Roman', 'serif'],
         code: ['monospace'],
       },
       colors: {
