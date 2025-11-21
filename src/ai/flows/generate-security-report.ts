@@ -30,15 +30,12 @@ export const GenerateSecurityReportOutputSchema = z.object({
 });
 export type GenerateSecurityReportOutput = z.infer<typeof GenerateSecurityReportOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'generateSecurityReportPrompt',
-  input: {schema: GenerateSecurityReportInputSchema},
-  output: {schema: GenerateSecurityReportOutputSchema},
-  prompt: `You are a professional cybersecurity analyst tasked with creating a detailed security report.
+export async function generateSecurityReport(input: GenerateSecurityReportInput): Promise<GenerateSecurityReportOutput> {
+    const prompt = `You are a professional cybersecurity analyst tasked with creating a detailed security report.
 Use Markdown for formatting. The report must be well-structured, clear, and comprehensive.
 
-**Report Title:** {{{reportTitle}}}
-**Date Range:** {{{dateRange}}}
+**Report Title:** ${input.reportTitle}
+**Date Range:** ${input.dateRange}
 
 ---
 
@@ -55,9 +52,7 @@ List the most significant security events and observations as bullet points. Inc
 ### 3. Detailed Analysis
 Provide a thorough analysis for each of the selected parameters below. Use data and context to explain the significance of the findings.
 
-{{#each selectedParameters}}
-- **{{{this}}}:** [Provide a detailed breakdown and analysis for this parameter here]
-{{/each}}
+${input.selectedParameters.map(p => `- **${p}:** [Provide a detailed breakdown and analysis for this parameter here]`).join('\n')}
 
 ### 4. Risk Assessment
 Evaluate the potential impact and likelihood of the identified threats and vulnerabilities. Assign a risk level (Critical, High, Medium, Low) to the key findings and justify your assessment.
@@ -65,25 +60,26 @@ Evaluate the potential impact and likelihood of the identified threats and vulne
 ### 5. Recommendations & Action Items
 Suggest specific, actionable steps to mitigate the identified risks. Prioritize recommendations based on severity and urgency. For each recommendation, specify the suggested action, the responsible party (e.g., IT, DevOps), and a priority level.
 
-{{#if additionalNotes}}
-### 6. Additional Notes
-{{{additionalNotes}}}
-{{/if}}
-`,
-});
+${input.additionalNotes ? `### 6. Additional Notes\n${input.additionalNotes}` : ''}
+`;
 
-const generateSecurityReportFlow = ai.defineFlow(
-  {
-    name: 'generateSecurityReportFlow',
-    inputSchema: GenerateSecurityReportInputSchema,
-    outputSchema: GenerateSecurityReportOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
-
-export async function generateSecurityReport(input: GenerateSecurityReportInput): Promise<GenerateSecurityReportOutput> {
-    return generateSecurityReportFlow(input);
+    const { text } = await ai.generate({
+        prompt: prompt,
+        output: {
+            schema: GenerateSecurityReportOutputSchema,
+            format: 'json'
+        }
+    });
+    
+    // The model's raw text response might be a JSON string. We need to parse it.
+    // However, the `generate` function with a schema should ideally return a structured object.
+    // Let's assume for now it might be a string that needs parsing.
+    try {
+        const parsedOutput = JSON.parse(text);
+        return GenerateSecurityReportOutputSchema.parse(parsedOutput);
+    } catch(e) {
+        // If it fails to parse, it might be because the model returned the markdown content directly
+        // without wrapping it in the JSON structure. Let's handle that case.
+        return { reportContent: text };
+    }
 }

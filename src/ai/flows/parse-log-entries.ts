@@ -24,11 +24,9 @@ const ParseLogEntriesOutputSchema = z.object({
 });
 export type ParseLogEntriesOutput = z.infer<typeof ParseLogEntriesOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'parseLogEntriesPrompt',
-  input: { schema: ParseLogEntriesInputSchema },
-  output: { schema: ParseLogEntriesOutputSchema },
-  prompt: `You are an expert log parsing engine. Your task is to convert unstructured log text into a structured JSON array.
+export async function parseLogEntries(input: ParseLogEntriesInput): Promise<ParseLogEntriesOutput> {
+  
+  const prompt = `You are an expert log parsing engine. Your task is to convert unstructured log text into a structured JSON array.
 Each line in the input represents a single log entry.
 
 Follow these rules for parsing:
@@ -38,25 +36,22 @@ Follow these rules for parsing:
 4.  **Message**: The rest of the log line should be the message.
 
 **Log Text to Parse:**
-{{{logText}}}
+${input.logText}
 
 Parse the text and return a JSON object with a single key "parsedLogs" containing an array of the structured log objects.
-`,
-});
+`;
 
-export const parseLogEntriesFlow = ai.defineFlow(
-  {
-    name: 'parseLogEntriesFlow',
-    inputSchema: ParseLogEntriesInputSchema,
-    outputSchema: ParseLogEntriesOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    return output!;
-  }
-);
+    const { output } = await ai.generate({
+        prompt: prompt,
+        output: {
+            schema: ParseLogEntriesOutputSchema,
+            format: 'json'
+        }
+    });
 
-
-export async function parseLogEntries(input: ParseLogEntriesInput): Promise<ParseLogEntriesOutput> {
-  return parseLogEntriesFlow(input);
+    if (!output) {
+      throw new Error("Failed to parse logs.");
+    }
+    
+    return output;
 }

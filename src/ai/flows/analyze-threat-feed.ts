@@ -26,39 +26,34 @@ export const AnalyzeThreatFeedOutputSchema = z.object({
 });
 export type AnalyzeThreatFeedOutput = z.infer<typeof AnalyzeThreatFeedOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'analyzeThreatFeedPrompt',
-  input: {schema: AnalyzeThreatFeedInputSchema},
-  output: {schema: AnalyzeThreatFeedOutputSchema},
-  prompt: `You are a cybersecurity threat analyst. Analyze the following threat feed entry and determine if it indicates a potential threat based on known vulnerabilities.
+
+export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
+  const prompt = `You are a cybersecurity threat analyst. Analyze the following threat feed entry and determine if it indicates a potential threat based on known vulnerabilities.
 
 Threat Feed Entry:
-{{feedEntry}}
+${input.feedEntry}
 
 Known Vulnerabilities:
-{{#each knownVulnerabilities}}- {{{this}}}
-{{/each}}
+${input.knownVulnerabilities.map(v => `- ${v}`).join('\n')}
 
 Based on your analysis, determine:
 1.  Whether the feed entry is indicative of a threat (isThreat: boolean).
 2.  The severity level of the potential threat (threatSeverity: string - high, medium, or low).
 3.  The reasoning behind your assessment (reasoning: string).
 
-Ensure your output is valid JSON.`,
-});
+Ensure your output is valid JSON.`;
+  
+    const { output } = await ai.generate({
+        prompt: prompt,
+        output: {
+            schema: AnalyzeThreatFeedOutputSchema,
+            format: 'json'
+        },
+    });
 
-const analyzeThreatFeedFlow = ai.defineFlow(
-  {
-    name: 'analyzeThreatFeedFlow',
-    inputSchema: AnalyzeThreatFeedInputSchema,
-    outputSchema: AnalyzeThreatFeedOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);
-
-export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
-  return analyzeThreatFeedFlow(input);
+    if (!output) {
+      throw new Error("Failed to get a structured response from the AI model.");
+    }
+    
+    return output;
 }

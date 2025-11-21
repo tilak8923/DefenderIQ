@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ThreatIntelPage() {
     const [feedEntry, setFeedEntry] = useState('{"timestamp": "2023-10-27T10:00:00Z", "source_ip": "198.51.100.42", "event_type": "web_request", "details": "GET /wp-admin/install.php"}');
@@ -24,6 +25,7 @@ export default function ThreatIntelPage() {
     
     const [output, setOutput] = useState<AnalyzeThreatFeedOutput | null>(null);
     const [running, setRunning] = useState(false);
+    const { toast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,6 +42,11 @@ export default function ThreatIntelPage() {
             setOutput(result);
         } catch (error) {
             console.error("Error analyzing threat feed:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Analysis Failed',
+                description: 'Could not analyze the threat feed entry. Please try again.',
+            });
         } finally {
             setRunning(false);
         }

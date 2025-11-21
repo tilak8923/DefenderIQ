@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const reportParameters = [
     { id: 'num_alerts', label: 'Number of alerts' },
@@ -40,6 +41,7 @@ export default function ReportsPage() {
 
   const [output, setOutput] = useState<GenerateSecurityReportOutput | null>(null);
   const [running, setRunning] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,11 @@ export default function ReportsPage() {
         setOutput(result);
     } catch (error) {
         console.error("Error generating report:", error);
+        toast({
+            variant: "destructive",
+            title: "Report Generation Failed",
+            description: "Could not generate the security report. Please try again.",
+        });
     } finally {
         setRunning(false);
     }

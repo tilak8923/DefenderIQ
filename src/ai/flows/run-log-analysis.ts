@@ -26,46 +26,15 @@ export const RunLogAnalysisOutputSchema = z.object({
 });
 export type RunLogAnalysisOutput = z.infer<typeof RunLogAnalysisOutputSchema>;
 
-// Define the prompt for the AI model
-const logAnalysisPrompt = ai.definePrompt({
-  name: 'logAnalysisPrompt',
-  input: {
-    schema: z.object({
-      log: z.string().describe('A single log entry.'),
-      rule: z.string().describe('An alert rule definition.'),
-    }),
-  },
-  output: {
-    schema: z.object({
-      isMatch: z.boolean().describe('Does the log entry trigger the alert rule?'),
-      reasoning: z.string().describe('A brief explanation of why the rule was or was not triggered.'),
-      alertDescription: z.string().optional().describe('If a match, a concise description for the alert.'),
-    }),
-  },
-  prompt: `You are a security information and event management (SIEM) detection engine.
-Your task is to determine if a given log entry triggers a specific security alert rule.
-
-**Alert Rule:**
-"{{rule}}"
-
-**Log Entry:**
-"{{log}}"
-
-Analyze the log entry based *only* on the provided rule.
-- If the log meets the rule's conditions, set isMatch to true and create a concise, human-readable alertDescription.
-- If it does not meet the conditions, set isMatch to false.
-- Provide a brief reasoning for your decision.
-`,
+const logAnalysisOutputSchema = z.object({
+    isMatch: z.boolean().describe('Does the log entry trigger the alert rule?'),
+    reasoning: z.string().describe('A brief explanation of why the rule was or was not triggered.'),
+    alertDescription: z.string().optional().describe('If a match, a concise description for the alert.'),
 });
 
-// The main Genkit flow
-const runLogAnalysisFlow = ai.defineFlow(
-  {
-    name: 'runLogAnalysisFlow',
-    inputSchema: RunLogAnalysisInputSchema,
-    outputSchema: RunLogAnalysisOutputSchema,
-  },
-  async ({ userId }) => {
+
+export async function runLogAnalysis(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
+    const { userId } = input;
     const { firestore } = initializeFirebase();
     
     // 1. Fetch all enabled alert rules from Firestore
@@ -102,9 +71,28 @@ const runLogAnalysisFlow = ai.defineFlow(
     // 3. For each log, evaluate it against each rule
     for (const log of logs) {
       for (const rule of rules) {
-        const { output } = await logAnalysisPrompt({
-          log: `${log.source}: ${log.message}`,
-          rule: `${rule.name}: ${rule.condition}`,
+        
+        const prompt = `You are a security information and event management (SIEM) detection engine.
+Your task is to determine if a given log entry triggers a specific security alert rule.
+
+**Alert Rule:**
+"${rule.name}: ${rule.condition}"
+
+**Log Entry:**
+"${log.source}: ${log.message}"
+
+Analyze the log entry based *only* on the provided rule.
+- If the log meets the rule's conditions, set isMatch to true and create a concise, human-readable alertDescription.
+- If it does not meet the conditions, set isMatch to false.
+- Provide a brief reasoning for your decision.
+`;
+
+        const { output } = await ai.generate({
+          prompt,
+          output: {
+            schema: logAnalysisOutputSchema,
+            format: 'json'
+          }
         });
 
         if (output?.isMatch) {
@@ -127,10 +115,4 @@ const runLogAnalysisFlow = ai.defineFlow(
       rulesEvaluated: rules.length,
       alertsCreated,
     };
-  }
-);
-
-
-export async function runLogAnalysis(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
-    return runLogAnalysisFlow(input);
 }
