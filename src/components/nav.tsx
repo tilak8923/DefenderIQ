@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, LogOut, Settings, MessageSquare, UserCog, FileText } from 'lucide-react';
+import { LogOut, Settings, MessageSquare, UserCog, FileText } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { signOutUser } from '@/firebase/non-blocking-login';
 import { Button } from './ui/button';
@@ -13,6 +13,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import Image from 'next/image';
+
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -40,7 +42,7 @@ export function MainNav() {
       <header className="sticky top-0 z-50 flex flex-col border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <Shield className="h-8 w-8 text-primary" />
+            <Image src="/logo.png" alt="DefendIQ Logo" width={32} height={32} />
             <h1 className="text-xl font-bold tracking-widest">DefendIQ</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -99,5 +101,3 @@ export function MainNav() {
     </TooltipProvider>
   );
 }
-
-    

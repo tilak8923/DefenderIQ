@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Chrome, Github, Shield } from 'lucide-react';
+import { Chrome, Github } from 'lucide-react';
 import Link from 'next/link';
 import {
   initiateEmailSignIn,
@@ -22,7 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useUser, useAuth } from '@/firebase';
-
+import Image from 'next/image';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -82,7 +82,7 @@ export default function LoginPage() {
             <div className="absolute top-4 left-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/landing" aria-label="Back to landing page">
-                        <Shield className="h-5 w-5 text-primary" />
+                        <Image src="/logo.png" alt="DefendIQ Logo" width={20} height={20} className="text-primary" />
                     </Link>
                 </Button>
             </div>
