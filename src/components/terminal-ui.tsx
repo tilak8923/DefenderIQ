@@ -10,13 +10,11 @@ interface HistoryItem {
 }
 
 const asciiBanner = `
-██████╗ ███████╗███████╗███████╗███╗   ██╗██████╗ ████CAG╗
-██╔══██╗██╔════╝██╔════╝██╔════╝████╗  ██║██╔══██╗╚████║
-██║  ██║█████╗  █████╗  █████╗  ██╔██╗ ██║██║  ██║ ██╔═╝
-██║  ██║██╔══╝  ██╔══╝  ██╔══╝  ██║╚██╗██║██║  ██║██╔══╝
-██████╔╝███████╗██║     ███████╗██║ ╚████║██████╔╝██████╗
-╚═════╝ ╚══════╝╚═╝     ╚══════╝╚═╝  ╚═══╝╚═════╝ ╚═════╝
-             d e f e n d i q . c o m                                                    
+██████╗ ███████╗███████╗███████╗███╗   ██╗██████╗ ██╗ ██████╗ 
+██╔══██╗██╔════╝██╔════╝██╔════╝████╗  ██║██╔══██╗██║██╔═══██╗
+██║  ██║█████╗  █████╗  █████╗  ██╔██╗ ██║██║  ██║██║██║   ██║
+██║  ██║██╔══╝  ██╔══╝  ██╔══╝  ██║╚██╗██║██║  ██║██║██║▄▄ ██║
+██████╔╝███████╗██║     ███████╗██║ ╚████║██████╔╝██║╚██████╔╝                                                                                                                                                                                                                                  
 `;
 
 export function TerminalUI() {
@@ -69,7 +67,7 @@ export function TerminalUI() {
 
   return (
     <div 
-        className="h-full w-full bg-black text-primary font-mono p-4 overflow-y-auto flex flex-col"
+        className="h-full w-full bg-background text-foreground font-mono p-4 overflow-y-auto flex flex-col"
         onClick={handleTerminalClick}
     >
       <div className="flex-grow">
@@ -101,7 +99,7 @@ export function TerminalUI() {
           type="text"
           value={input}
           onChange={handleInputChange}
-          className="bg-transparent border-none text-primary w-full focus:outline-none focus:ring-0"
+          className="bg-transparent border-none text-foreground w-full focus:outline-none focus:ring-0"
           autoComplete="off"
           disabled={running}
         />
@@ -109,5 +107,3 @@ export function TerminalUI() {
     </div>
   );
 }
-
-    
