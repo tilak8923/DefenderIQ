@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Chrome, Github } from 'lucide-react';
+import { Chrome, Github, Shield } from 'lucide-react';
 import Link from 'next/link';
 import {
   initiateEmailSignUp,
@@ -86,8 +86,15 @@ export default function SignupPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
-        <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
+        <Card className="w-full max-w-md relative">
+            <div className="absolute top-4 left-4">
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href="/landing" aria-label="Back to landing page">
+                        <Shield className="h-5 w-5 text-primary" />
+                    </Link>
+                </Button>
+            </div>
+            <CardHeader className="text-center pt-12">
             <CardTitle className="text-2xl">Create an Account</CardTitle>
             <CardDescription>
                 Get started with your security dashboard in minutes.

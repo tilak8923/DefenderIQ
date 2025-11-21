@@ -9,14 +9,12 @@ export default function Home() {
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
+    // Always redirect to the landing page.
+    // The landing page will handle the user's next steps.
     if (!isUserLoading) {
-      if (user) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/login');
-      }
+      router.replace('/landing');
     }
-  }, [user, isUserLoading, router]);
+  }, [isUserLoading, router]);
 
   // You can optionally show a loading spinner here
   return <div>Loading...</div>;
