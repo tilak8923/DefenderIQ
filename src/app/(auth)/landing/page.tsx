@@ -31,7 +31,7 @@ export default function LandingPage() {
               <DropdownMenuTrigger
                 onMouseEnter={() => setPlatformOpen(true)}
                 onMouseLeave={() => setPlatformOpen(false)}
-                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
               >
                 Platform <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
@@ -52,7 +52,7 @@ export default function LandingPage() {
               <DropdownMenuTrigger
                 onMouseEnter={() => setSolutionOpen(true)}
                 onMouseLeave={() => setSolutionOpen(false)}
-                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+                className="flex items-center gap-1 text-sm font-medium text-neutral-300 hover:text-white transition-colors outline-none"
               >
                 Solution <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
