@@ -19,14 +19,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Server, Rss } from 'lucide-react';
+import { Search, Rss } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserId } from '@/hooks/use-user-id';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { LogEntry } from '@/lib/types';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 
 const severities = ['ALL', 'CRITICAL', 'WARN', 'INFO', 'DEBUG'];
@@ -78,18 +76,10 @@ export default function LogsPage() {
   const renderEmptyState = () => (
     <div className="text-center py-16">
         <Rss className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">Waiting for Log Data</h3>
+        <h3 className="mt-4 text-lg font-semibold">No Log Data Found</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-            No log entries have been received yet. Once you set up a collector, your logs will appear here in real-time.
+            No log entries have been found for your account.
         </p>
-        <div className="mt-6">
-            <Button asChild>
-                <Link href="/collectors">
-                    <Server className="mr-2 h-4 w-4" />
-                    Set Up a Collector
-                </Link>
-            </Button>
-        </div>
     </div>
   );
 
