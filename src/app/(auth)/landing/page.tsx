@@ -2,8 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { BarChart, Bot, Shield, ShieldCheck, Terminal, Zap, Cpu, Network } from 'lucide-react';
+import { Bot, Shield, ShieldCheck, Terminal, Zap, Cpu, Network } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
@@ -13,7 +12,7 @@ const features = [
     description: 'Keep a constant eye on your systems with a live-updating dashboard and instant alerts.',
   },
   {
-    icon: BarChart,
+    icon: Cpu,
     title: 'Advanced Analytics',
     description: 'Leverage AI to analyze logs, detect threats, and generate comprehensive security reports.',
   },
@@ -64,15 +63,15 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="container flex h-14 items-center">
-          <div className="mr-4 flex items-center">
+          <div className="flex items-center">
             <Shield className="h-6 w-6 text-primary mr-2" />
-            <span className="font-bold text-lg">TSIEM</span>
+            <span className="font-bold text-lg mr-6">TSIEM</span>
+            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+              <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">About</Link>
+              <Link href="/docs" className="text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
+              <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">Support</Link>
+            </nav>
           </div>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">About</Link>
-            <Link href="/docs" className="text-muted-foreground transition-colors hover:text-foreground">Docs</Link>
-            <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">Support</Link>
-          </nav>
           <div className="flex flex-1 items-center justify-end">
             <Button asChild>
                 <Link href="/login">Get Started</Link>
