@@ -31,8 +31,8 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#141413] text-white font-body">
-      <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-[#141413]/80 backdrop-blur-sm">
+    <div className="flex flex-col min-h-screen text-white font-body">
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto h-16 flex items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="flex items-center gap-2">
             {mounted && (
@@ -217,10 +217,10 @@ if (alert.matches(PhishingAttempt)) {
                         <span className="font-bold text-lg tracking-wider">DefendIQ</span>
                     </Link>
                     <div className="flex space-x-4 mt-4">
-                        <a href="#" className="text-neutral-400 hover:text-white"><Instagram size={20} /></a>
-                        <a href="#" className="text-neutral-400 hover:text-white"><Linkedin size={20} /></a>
-                        <a href="#" className="text-neutral-400 hover:text-white"><Github size={20} /></a>
-                        <a href="#" className="text-neutral-400 hover:text-white"><Twitter size={20} /></a>
+                        <a href="https://www.instagram.com/_impetuous_illusionist_90/" className="text-neutral-400 hover:text-white"><Instagram size={20} /></a>
+                        <a href="https://www.linkedin.com/in/tilak-tiwari-33b84825a/" className="text-neutral-400 hover:text-white"><Linkedin size={20} /></a>
+                        <a href="https://github.com/tilak8923" className="text-neutral-400 hover:text-white"><Github size={20} /></a>
+                        <a href="https://x.com/tilaktiwari_" className="text-neutral-400 hover:text-white"><Twitter size={20} /></a>
                     </div>
                 </div>
 
