@@ -113,7 +113,7 @@ export default function LandingPage() {
         </section>
 
         {/* About Section */}
-        <section id="about" className="py-20 md:py-28 bg-neutral-950">
+        <section id="about" className="py-20 md:py-28">
           <div className="container mx-auto px-4 md:px-6">
             <h2 className="text-3xl md:text-4xl font-bold text-center">About DefendIQ</h2>
             <p className="mx-auto mt-6 max-w-3xl text-center text-neutral-300">
@@ -177,7 +177,7 @@ if (alert.matches(PhishingAttempt)) {
         </section>
 
         {/* Solution/Features Section */}
-        <section id="features" className="py-20 md:py-28 bg-neutral-950">
+        <section id="features" className="py-20 md:py-28">
           <div className="container mx-auto px-4 md:px-6 text-center">
             <h2 className="text-3xl md:text-4xl font-bold">A Complete Security Solution</h2>
             <p className="mx-auto mt-4 max-w-2xl text-neutral-300">
