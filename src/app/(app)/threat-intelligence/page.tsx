@@ -128,7 +128,7 @@ export default function ThreatIntelPage() {
                 </Card>
             </div>
             <div>
-                 <h2 className="text-xl font-bold tracking-wider mb-4">Analysis Result</h2>
+                 <h2 className="text-xl font-bold tracking-wider">Analysis Result</h2>
                  <Card className="min-h-[300px]">
                     {getResultCard()}
                  </Card>

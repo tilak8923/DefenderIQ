@@ -24,12 +24,6 @@ const ParseLogEntriesOutputSchema = z.object({
 });
 export type ParseLogEntriesOutput = z.infer<typeof ParseLogEntriesOutputSchema>;
 
-
-export async function parseLogEntries(input: ParseLogEntriesInput): Promise<ParseLogEntriesOutput> {
-  return parseLogEntriesFlow(input);
-}
-
-
 const prompt = ai.definePrompt({
   name: 'parseLogEntriesPrompt',
   input: { schema: ParseLogEntriesInputSchema },
@@ -61,3 +55,8 @@ export const parseLogEntriesFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+export async function parseLogEntries(input: ParseLogEntriesInput): Promise<ParseLogEntriesOutput> {
+  return parseLogEntriesFlow(input);
+}

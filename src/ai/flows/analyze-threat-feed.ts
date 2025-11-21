@@ -26,10 +26,6 @@ export const AnalyzeThreatFeedOutputSchema = z.object({
 });
 export type AnalyzeThreatFeedOutput = z.infer<typeof AnalyzeThreatFeedOutputSchema>;
 
-export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
-  return analyzeThreatFeedFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'analyzeThreatFeedPrompt',
   input: {schema: AnalyzeThreatFeedInputSchema},
@@ -62,3 +58,7 @@ const analyzeThreatFeedFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
+  return analyzeThreatFeedFlow(input);
+}

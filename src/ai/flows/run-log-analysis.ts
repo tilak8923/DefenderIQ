@@ -26,11 +26,6 @@ export const RunLogAnalysisOutputSchema = z.object({
 });
 export type RunLogAnalysisOutput = z.infer<typeof RunLogAnalysisOutputSchema>;
 
-export async function runLogAnalysis(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
-    return runLogAnalysisFlow(input);
-}
-
-
 // Define the prompt for the AI model
 const logAnalysisPrompt = ai.definePrompt({
   name: 'logAnalysisPrompt',
@@ -134,3 +129,8 @@ const runLogAnalysisFlow = ai.defineFlow(
     };
   }
 );
+
+
+export async function runLogAnalysis(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
+    return runLogAnalysisFlow(input);
+}
