@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,18 +24,25 @@ export default function LandingPage() {
   const [platformOpen, setPlatformOpen] = useState(false);
   const [solutionOpen, setSolutionOpen] = useState(false);
   const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white font-body">
       <header className="sticky top-0 z-50 w-full border-b border-neutral-800 bg-black/80 backdrop-blur-sm">
         <div className="container mx-auto h-16 flex items-center justify-between px-4 md:px-6">
           <Link href="/landing" className="flex items-center gap-2">
-            <Image 
-              src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
-              alt="DefendIQ Logo" 
-              width={24} 
-              height={24} 
-            />
+            {mounted && (
+              <Image 
+                src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
+                alt="DefendIQ Logo" 
+                width={24} 
+                height={24} 
+              />
+            )}
             <span className="font-bold text-lg tracking-wider">DefendIQ</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">

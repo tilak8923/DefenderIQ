@@ -22,8 +22,9 @@ import {
 } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth, useTheme } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import Image from 'next/image';
+import { useTheme } from 'next-themes';
 
 export default function SignupPage() {
     const [email, setEmail] = useState('');
@@ -34,6 +35,11 @@ export default function SignupPage() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (!isUserLoading && user) {
@@ -92,12 +98,14 @@ export default function SignupPage() {
             <div className="absolute top-4 left-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/landing" aria-label="Back to landing page">
-                         <Image 
-                            src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
-                            alt="DefendIQ Logo" 
-                            width={20} 
-                            height={20} 
-                         />
+                         {mounted && (
+                            <Image 
+                                src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
+                                alt="DefendIQ Logo" 
+                                width={20} 
+                                height={20} 
+                            />
+                         )}
                     </Link>
                 </Button>
             </div>
