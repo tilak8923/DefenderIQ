@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -26,6 +26,20 @@ import type { LogEntry } from '@/lib/types';
 
 
 const severities = ['ALL', 'CRITICAL', 'WARN', 'INFO', 'DEBUG'];
+const sources = ['AuthService', 'WebServer', 'Database', 'Firewall', 'PaymentGateway'];
+const messages = [
+    'User login successful',
+    'Failed login attempt',
+    'Database connection established',
+    'Port scan detected',
+    'API rate limit exceeded',
+    'Data export completed',
+    'System health check OK',
+    'Configuration updated',
+    'Unexpected error processing request',
+    'User password reset requested',
+];
+
 
 const getSeverityBadgeVariant = (severity: string) => {
   switch (severity) {
@@ -38,8 +52,21 @@ const getSeverityBadgeVariant = (severity: string) => {
   }
 };
 
+const createRandomLog = (): LogEntry => {
+    const randomSeverity = severities[Math.floor(Math.random() * (severities.length - 1)) + 1] as LogEntry['severity'];
+    const randomSource = sources[Math.floor(Math.random() * sources.length)];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    return {
+        id: `log-${Date.now()}-${Math.random()}`,
+        timestamp: new Date().toISOString(),
+        severity: randomSeverity,
+        source: randomSource,
+        message: `${randomMessage} from IP ${(Math.random()*255).toFixed(0)}.${(Math.random()*255).toFixed(0)}.${(Math.random()*255).toFixed(0)}.${(Math.random()*255).toFixed(0)}`,
+    };
+};
+
 export default function LogsPage() {
-  const [allLogEntries] = useState<LogEntry[]>(() => 
+  const [allLogEntries, setAllLogEntries] = useState<LogEntry[]>(() => 
     sampleLogEntries.map((log, index) => ({
       ...log,
       id: `log-${index}`
@@ -47,6 +74,14 @@ export default function LogsPage() {
   );
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('ALL');
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+        setAllLogEntries(prevLogs => [createRandomLog(), ...prevLogs]);
+    }, 5000); // Add a new log every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on component unmount
+  }, []);
   
   const filteredLogs = allLogEntries.filter((log) => {
     const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
