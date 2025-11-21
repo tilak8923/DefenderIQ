@@ -1,27 +1,31 @@
 
 'use client';
 
-import { useUser } from '@/firebase';
+import { useUser, useStorage } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { Moon, Sun, Upload } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
+  const storage = useStorage();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for forms
-  const [newPhotoURL, setNewPhotoURL] = useState(user?.photoURL ?? '');
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -36,27 +40,58 @@ export default function SettingsPage() {
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === 'password'
   );
+  
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    handleUpdateProfile(file);
+  };
+
+  const handleUpdateProfile = (file: File) => {
     if (!user) return;
     
     setIsUpdatingPhoto(true);
-    try {
-      await updateProfile(user, { photoURL: newPhotoURL });
-      toast({
-        title: 'Profile Updated',
-        description: 'Your profile picture has been changed.',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Update Failed',
-        description: error.message,
-      });
-    } finally {
+    setUploadProgress(0);
+
+    const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
         setIsUpdatingPhoto(false);
-    }
+        toast({
+          variant: 'destructive',
+          title: 'Upload Failed',
+          description: error.message,
+        });
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+          await updateProfile(user, { photoURL: downloadURL });
+          toast({
+            title: 'Profile Updated',
+            description: 'Your profile picture has been changed.',
+          });
+          setIsUpdatingPhoto(false);
+        }).catch((error) => {
+          setIsUpdatingPhoto(false);
+          toast({
+            variant: 'destructive',
+            title: 'Update Failed',
+            description: 'Could not get the new image URL. ' + error.message,
+          });
+        });
+      }
+    );
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -70,13 +105,9 @@ export default function SettingsPage() {
 
     setIsUpdatingPassword(true);
     try {
-      // Re-authenticate user before password change for security
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
       await reauthenticateWithCredential(user, credential);
-      
-      // Now update the password
       await updatePassword(user, newPassword);
-
       toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
       setCurrentPassword('');
       setNewPassword('');
@@ -169,15 +200,20 @@ export default function SettingsPage() {
                             <p className="text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
-                     <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="photoUrl">Profile Picture URL</Label>
-                            <Input id="photoUrl" value={newPhotoURL} onChange={(e) => setNewPhotoURL(e.target.value)} placeholder="https://example.com/image.png" />
-                        </div>
-                        <Button type="submit" disabled={isUpdatingPhoto} className="w-full sm:w-auto">
-                            {isUpdatingPhoto ? 'Updating...' : 'Update Picture'}
+                     <div className="space-y-4">
+                        <Label>Profile Picture</Label>
+                        <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                        <Button onClick={handleFileSelect} disabled={isUpdatingPhoto}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload Image
                         </Button>
-                    </form>
+                        {isUpdatingPhoto && (
+                            <div className="space-y-1">
+                                <p className="text-sm text-muted-foreground">Uploading...</p>
+                                <Progress value={uploadProgress} className="w-full" />
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 
@@ -246,5 +282,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
