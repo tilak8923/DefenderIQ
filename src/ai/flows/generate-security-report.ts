@@ -65,21 +65,7 @@ ${input.additionalNotes ? `### 6. Additional Notes\n${input.additionalNotes}` : 
 
     const { text } = await ai.generate({
         prompt: prompt,
-        output: {
-            schema: GenerateSecurityReportOutputSchema,
-            format: 'json'
-        }
     });
     
-    // The model's raw text response might be a JSON string. We need to parse it.
-    // However, the `generate` function with a schema should ideally return a structured object.
-    // Let's assume for now it might be a string that needs parsing.
-    try {
-        const parsedOutput = JSON.parse(text);
-        return GenerateSecurityReportOutputSchema.parse(parsedOutput);
-    } catch(e) {
-        // If it fails to parse, it might be because the model returned the markdown content directly
-        // without wrapping it in the JSON structure. Let's handle that case.
-        return { reportContent: text };
-    }
+    return { reportContent: text };
 }
