@@ -3,7 +3,7 @@
 /**
  * @fileOverview Provides command-line assistance with a hacker vibe.
  *
- * - provideCommandLineAssistance - A function that provides command-line assistance.
+ * - provideCommandLineAssistanceFlow - A function that provides command-line assistance.
  * - ProvideCommandLineAssistanceInput - The input type for the provideCommandLineAssistance function.
  * - ProvideCommandLineAssistanceOutput - The return type for the provideCommandLineAssistance function.
  */
@@ -11,19 +11,15 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const ProvideCommandLineAssistanceInputSchema = z.object({
+export const ProvideCommandLineAssistanceInputSchema = z.object({
   command: z.string().describe('The command to execute.'),
 });
 export type ProvideCommandLineAssistanceInput = z.infer<typeof ProvideCommandLineAssistanceInputSchema>;
 
-const ProvideCommandLineAssistanceOutputSchema = z.object({
+export const ProvideCommandLineAssistanceOutputSchema = z.object({
   response: z.string().describe('The response from the command.'),
 });
 export type ProvideCommandLineAssistanceOutput = z.infer<typeof ProvideCommandLineAssistanceOutputSchema>;
-
-export async function provideCommandLineAssistance(input: ProvideCommandLineAssistanceInput): Promise<ProvideCommandLineAssistanceOutput> {
-  return provideCommandLineAssistanceFlow(input);
-}
 
 const prompt = ai.definePrompt({
   name: 'provideCommandLineAssistancePrompt',
@@ -38,7 +34,7 @@ Format your response as a clear, readable string that can be displayed in a term
 Command: {{{command}}}`,
 });
 
-const provideCommandLineAssistanceFlow = ai.defineFlow(
+export const provideCommandLineAssistanceFlow = ai.defineFlow(
   {
     name: 'provideCommandLineAssistanceFlow',
     inputSchema: ProvideCommandLineAssistanceInputSchema,

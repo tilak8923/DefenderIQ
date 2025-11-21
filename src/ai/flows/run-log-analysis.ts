@@ -13,24 +13,18 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 
 // Define schemas for the flow
-const RunLogAnalysisInputSchema = z.object({
+export const RunLogAnalysisInputSchema = z.object({
   userId: z.string().describe("The ID of the user whose logs should be analyzed."),
 });
 export type RunLogAnalysisInput = z.infer<typeof RunLogAnalysisInputSchema>;
 
 
-const RunLogAnalysisOutputSchema = z.object({
+export const RunLogAnalysisOutputSchema = z.object({
   logsScanned: z.number().describe('The total number of log entries scanned.'),
   rulesEvaluated: z.number().describe('The total number of enabled alert rules evaluated.'),
   alertsCreated: z.number().describe('The number of new alerts created.'),
 });
 export type RunLogAnalysisOutput = z.infer<typeof RunLogAnalysisOutputSchema>;
-
-
-// This is the main exported function that the frontend will call
-export async function runLogAnalysisForUser(input: RunLogAnalysisInput): Promise<RunLogAnalysisOutput> {
-    return runLogAnalysisFlow(input);
-}
 
 
 // Define the prompt for the AI model
@@ -66,7 +60,7 @@ Analyze the log entry based *only* on the provided rule.
 });
 
 // The main Genkit flow
-const runLogAnalysisFlow = ai.defineFlow(
+export const runLogAnalysisFlow = ai.defineFlow(
   {
     name: 'runLogAnalysisFlow',
     inputSchema: RunLogAnalysisInputSchema,

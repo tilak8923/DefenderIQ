@@ -1,11 +1,9 @@
-// This file is machine-generated - edit at your own risk!
-
 'use server';
 
 /**
  * @fileOverview Integrates threat intelligence feeds and uses LLM reasoning to identify potential threats in real-time.
  *
- * - analyzeThreatFeed - A function that analyzes threat feed entries.
+ * - analyzeThreatFeedFlow - A function that analyzes threat feed entries.
  * - AnalyzeThreatFeedInput - The input type for the analyzeThreatFeed function.
  * - AnalyzeThreatFeedOutput - The return type for the analyzeThreatFeed function.
  */
@@ -13,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const AnalyzeThreatFeedInputSchema = z.object({
+export const AnalyzeThreatFeedInputSchema = z.object({
   feedEntry: z.string().describe('A single entry from a threat intelligence feed.'),
   knownVulnerabilities: z
     .array(z.string())
@@ -21,20 +19,13 @@ const AnalyzeThreatFeedInputSchema = z.object({
 });
 export type AnalyzeThreatFeedInput = z.infer<typeof AnalyzeThreatFeedInputSchema>;
 
-const AnalyzeThreatFeedOutputSchema = z.object({
+export const AnalyzeThreatFeedOutputSchema = z.object({
   isThreat: z.boolean().describe('Whether the feed entry is indicative of a threat.'),
   threatSeverity: z.string().describe('The severity level of the potential threat (e.g., high, medium, low).'),
   reasoning: z.string().describe('The LLM reasoning behind the threat assessment.'),
 });
 export type AnalyzeThreatFeedOutput = z.infer<typeof AnalyzeThreatFeedOutputSchema>;
 
-// This is just a wrapper, the actual flow is defined below
-export async function analyzeThreatFeed(input: AnalyzeThreatFeedInput): Promise<AnalyzeThreatFeedOutput> {
-  const flow = ai.getFlow('analyzeThreatFeedFlow');
-  if (!flow) throw new Error('analyzeThreatFeedFlow not found');
-  const result = await flow(input);
-  return result;
-}
 
 const prompt = ai.definePrompt({
   name: 'analyzeThreatFeedPrompt',
@@ -56,7 +47,7 @@ Based on your analysis, determine:
 Ensure your output is valid JSON.`,
 });
 
-ai.defineFlow(
+export const analyzeThreatFeedFlow = ai.defineFlow(
   {
     name: 'analyzeThreatFeedFlow',
     inputSchema: AnalyzeThreatFeedInputSchema,

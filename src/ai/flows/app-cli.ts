@@ -6,10 +6,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { generateSecurityReport } from './generate-security-report';
-import { recentAlerts } from '@/lib/data';
 import { runFlow } from '@genkit-ai/next/client';
 import type { GenerateSecurityReportOutput } from './generate-security-report';
+import { recentAlerts } from '@/lib/data';
 
 // Tool to list recent security alerts
 const listAlertsTool = ai.defineTool(
@@ -90,25 +89,17 @@ Only generate the raw output as if it were a real terminal executing the command
 );
 
 
-const AppCliInputSchema = z.object({
+export const AppCliInputSchema = z.object({
   command: z.string().describe('The command typed by the user in the terminal.'),
 });
 export type AppCliInput = z.infer<typeof AppCliInputSchema>;
 
-const AppCliOutputSchema = z.object({
+export const AppCliOutputSchema = z.object({
   response: z.string().describe('The output from the command execution, formatted for the terminal.'),
 });
 export type AppCliOutput = z.infer<typeof AppCliOutputSchema>;
 
-// This is just a wrapper, the actual flow is defined below
-export async function appCli(input: AppCliInput): Promise<AppCliOutput> {
-  const flow = ai.getFlow('appCliFlow');
-  if (!flow) throw new Error('appCliFlow not found');
-  const result = await flow(input);
-  return result;
-}
-
-ai.defineFlow(
+export const appCliFlow = ai.defineFlow(
   {
     name: 'appCliFlow',
     inputSchema: AppCliInputSchema,

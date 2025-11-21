@@ -13,7 +13,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const GenerateSecurityReportInputSchema = z.object({
+export const GenerateSecurityReportInputSchema = z.object({
   reportTitle: z.string().describe('Title of the security report.'),
   dateRange: z.string().describe('Date range for the report (e.g., Last 7 days, Last 30 days).'),
   selectedParameters: z
@@ -25,20 +25,10 @@ const GenerateSecurityReportInputSchema = z.object({
 });
 export type GenerateSecurityReportInput = z.infer<typeof GenerateSecurityReportInputSchema>;
 
-const GenerateSecurityReportOutputSchema = z.object({
+export const GenerateSecurityReportOutputSchema = z.object({
   reportContent: z.string().describe('The generated security report content in Markdown format.'),
 });
 export type GenerateSecurityReportOutput = z.infer<typeof GenerateSecurityReportOutputSchema>;
-
-// This is just a wrapper, the actual flow is defined below.
-export async function generateSecurityReport(
-  input: GenerateSecurityReportInput
-): Promise<GenerateSecurityReportOutput> {
-  const flow = ai.getFlow('generateSecurityReportFlow');
-  if (!flow) throw new Error('generateSecurityReportFlow not found');
-  const result = await flow(input);
-  return result;
-}
 
 const prompt = ai.definePrompt({
   name: 'generateSecurityReportPrompt',
@@ -82,7 +72,7 @@ Suggest specific, actionable steps to mitigate the identified risks. Prioritize 
 `,
 });
 
-ai.defineFlow(
+export const generateSecurityReportFlow = ai.defineFlow(
   {
     name: 'generateSecurityReportFlow',
     inputSchema: GenerateSecurityReportInputSchema,

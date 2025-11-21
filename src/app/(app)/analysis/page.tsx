@@ -13,44 +13,51 @@ import {
 import { Loader2, Zap } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-
-interface RunLogAnalysisOutput {
-  logsScanned: number;
-  rulesEvaluated: number;
-  alertsCreated: number;
-}
+import { runFlow } from '@genkit-ai/next/client';
+import { useUserId } from '@/hooks/use-user-id';
+import type { RunLogAnalysisOutput } from '@/ai/flows/run-log-analysis';
 
 export default function AnalysisPage() {
   const [output, setOutput] = useState<RunLogAnalysisOutput | null>(null);
   const [running, setRunning] = useState(false);
   const { toast } = useToast();
+  const userId = useUserId();
 
   const handleRunAnalysis = async () => {
+    if (!userId) {
+        toast({
+            variant: 'destructive',
+            title: "Authentication Error",
+            description: "Could not identify user. Please log in again.",
+        });
+        return;
+    }
     setRunning(true);
     setOutput(null);
 
-    // Simulate an async operation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const result: RunLogAnalysisOutput = {
-      logsScanned: 152,
-      rulesEvaluated: 4,
-      alertsCreated: 2,
-    };
-
-    setOutput(result);
-    
-    if (result.alertsCreated > 0) {
-      toast({
-          title: "Analysis Complete",
-          description: `${result.alertsCreated} new alert(s) have been generated. Check the dashboard.`,
-      });
-    } else {
-       toast({
-          title: "Analysis Complete",
-          description: `No new threats detected this time.`,
-      });
+    try {
+        const result = await runFlow<RunLogAnalysisOutput>('runLogAnalysisFlow', { userId });
+        setOutput(result);
+        if (result.alertsCreated > 0) {
+          toast({
+              title: "Analysis Complete",
+              description: `${result.alertsCreated} new alert(s) have been generated. Check the dashboard.`,
+          });
+        } else {
+           toast({
+              title: "Analysis Complete",
+              description: `No new threats detected this time.`,
+          });
+        }
+    } catch (error) {
+        console.error("Error running analysis:", error);
+        toast({
+            variant: 'destructive',
+            title: "Analysis Failed",
+            description: "Could not complete the log analysis.",
+        });
     }
+
 
     setRunning(false);
   };
@@ -77,7 +84,7 @@ export default function AnalysisPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleRunAnalysis} disabled={running}>
+            <Button onClick={handleRunAnalysis} disabled={running || !userId}>
               {running ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
