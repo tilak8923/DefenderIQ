@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, BarChart, Terminal, ShieldCheck } from 'lucide-react';
+import { ChevronDown, BarChart, Terminal, ShieldCheck, Instagram, Linkedin, Github, Twitter } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
@@ -46,7 +46,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg tracking-wider">DefendIQ</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <NavLink href="#about">About</NavLink>
+            <NavLink href="#features">Features</NavLink>
             <DropdownMenu open={platformOpen} onOpenChange={setPlatformOpen}>
               <DropdownMenuTrigger
                 onMouseEnter={() => setPlatformOpen(true)}
@@ -109,16 +109,6 @@ export default function LandingPage() {
             <Button size="lg" asChild variant="outline" className="bg-transparent border-neutral-700 text-white hover:bg-neutral-900">
               <a href="#features">Explore Features</a>
             </Button>
-          </div>
-        </section>
-
-        {/* About Section */}
-        <section id="about" className="py-20 md:py-28">
-          <div className="container mx-auto px-4 md:px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-center">About DefendIQ</h2>
-            <p className="mx-auto mt-6 max-w-3xl text-center text-neutral-300">
-              In an era of ever-evolving cyber threats, security teams are overwhelmed with alerts from countless disconnected tools. DefendIQ was built to solve this problem. We provide a unified platform that aggregates security data from all your sources, uses AI to detect real threats, and enables rapid, automated response. Our mission is to empower security teams to work smarter, faster, and more effectively.
-            </p>
           </div>
         </section>
 
@@ -210,15 +200,70 @@ if (alert.matches(PhishingAttempt)) {
         </section>
       </main>
 
-      <footer className="border-t border-neutral-800">
-        <div className="container mx-auto py-6 px-4 md:px-6 text-center text-sm text-neutral-400">
-          &copy; {new Date().getFullYear()} DefendIQ. All rights reserved.
+      <footer className="border-t border-neutral-800 mt-20" id="about">
+        <div className="container mx-auto py-12 px-4 md:px-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+                {/* Logo and Socials */}
+                <div className="col-span-2 md:col-span-1">
+                    <Link href="/landing" className="flex items-center gap-2 mb-4">
+                        {mounted && (
+                          <Image 
+                            src={theme === 'dark' ? '/logo.png' : '/logo2.png'} 
+                            alt="DefendIQ Logo" 
+                            width={45} 
+                            height={45} 
+                          />
+                        )}
+                        <span className="font-bold text-lg tracking-wider">DefendIQ</span>
+                    </Link>
+                    <div className="flex space-x-4 mt-4">
+                        <a href="#" className="text-neutral-400 hover:text-white"><Instagram size={20} /></a>
+                        <a href="#" className="text-neutral-400 hover:text-white"><Linkedin size={20} /></a>
+                        <a href="#" className="text-neutral-400 hover:text-white"><Github size={20} /></a>
+                        <a href="#" className="text-neutral-400 hover:text-white"><Twitter size={20} /></a>
+                    </div>
+                </div>
+
+                {/* Product Links */}
+                <div>
+                    <h4 className="font-semibold mb-3">Product</h4>
+                    <ul className="space-y-2">
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Features</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Security</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Enterprise</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Pricing</a></li>
+                    </ul>
+                </div>
+
+                {/* Company Links */}
+                 <div>
+                    <h4 className="font-semibold mb-3">Company</h4>
+                    <ul className="space-y-2">
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">About us</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Careers</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Contact</a></li>
+                        <li><a href="#" className="text-sm text-neutral-400 hover:text-white">Blog</a></li>
+                    </ul>
+                </div>
+                
+                {/* Legal Links */}
+                <div className="col-span-2">
+                    <h4 className="font-semibold mb-3">Terms and policies</h4>
+                    <ul className="space-y-2 text-sm text-neutral-400 columns-2">
+                        <li><a href="#" className="hover:text-white">Privacy choices</a></li>
+                        <li><a href="#" className="hover:text-white">Privacy policy</a></li>
+                        <li><a href="#" className="hover:text-white">Responsible disclosure policy</a></li>
+                        <li><a href="#" className="hover:text-white">Terms of service: Commercial</a></li>
+                        <li><a href="#" className="hover:text-white">Terms of service: Consumer</a></li>
+                        <li><a href="#" className="hover:text-white">Usage policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div className="mt-12 pt-8 border-t border-neutral-800 text-center text-sm text-neutral-400">
+                &copy; {new Date().getFullYear()} DefendIQ. All rights reserved.
+            </div>
         </div>
       </footer>
     </div>
   );
 }
-
-    
-
-    
