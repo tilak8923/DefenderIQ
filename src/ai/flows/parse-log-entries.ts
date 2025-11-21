@@ -4,7 +4,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit/zod';
+import { z } from 'genkit';
 
 // Define the structure of a single log entry, matching lib/types.ts but without the ID.
 const LogEntrySchema = z.object({

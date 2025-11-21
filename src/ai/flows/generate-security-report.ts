@@ -11,7 +11,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit/zod';
+import {z} from 'genkit';
 
 export const GenerateSecurityReportInputSchema = z.object({
   reportTitle: z.string().describe('Title of the security report.'),

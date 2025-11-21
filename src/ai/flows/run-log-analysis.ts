@@ -4,7 +4,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit/zod';
+import { z } from 'genkit';
 import { initializeFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import type { LogEntry, AlertRule } from '@/lib/types';

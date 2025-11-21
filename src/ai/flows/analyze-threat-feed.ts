@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit/zod';
+import {z} from 'genkit';
 
 export const AnalyzeThreatFeedInputSchema = z.object({
   feedEntry: z.string().describe('A single entry from a threat intelligence feed.'),
@@ -40,7 +40,8 @@ Threat Feed Entry:
 {{feedEntry}}
 
 Known Vulnerabilities:
-{{#each knownVulnerabilities}}- {{{this}}}\n{{/each}}
+{{#each knownVulnerabilities}}- {{{this}}}
+{{/each}}
 
 Based on your analysis, determine:
 1.  Whether the feed entry is indicative of a threat (isThreat: boolean).
