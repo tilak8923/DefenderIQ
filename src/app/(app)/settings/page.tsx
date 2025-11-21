@@ -10,12 +10,27 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Edit } from 'lucide-react';
+import { Moon, Sun, Edit, X, Chrome, Github, Mail } from 'lucide-react';
 import { useState, useRef } from 'react';
-import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential, type UserInfo } from 'firebase/auth';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+
+const ProviderIcon = ({ providerId }: { providerId: string }) => {
+    switch (providerId) {
+        case 'google.com':
+            return <Chrome className="h-5 w-5" />;
+        case 'github.com':
+            return <Github className="h-5 w-5" />;
+        case 'password':
+            return <Mail className="h-5 w-5" />;
+        default:
+            return null;
+    }
+};
 
 export default function SettingsPage() {
   const { user, isUserLoading } = useUser();
@@ -50,10 +65,10 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     
-    handleUpdateProfile(file);
+    uploadNewProfilePicture(file);
   };
 
-  const handleUpdateProfile = (file: File) => {
+  const uploadNewProfilePicture = (file: File) => {
     if (!user) return;
     
     setIsUpdatingPhoto(true);
@@ -93,6 +108,47 @@ export default function SettingsPage() {
         });
       }
     );
+  };
+  
+  const handleRemoveProfilePicture = async () => {
+      if (!user || !user.photoURL) return;
+
+      setIsUpdatingPhoto(true);
+      
+      const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+
+      try {
+          // Delete the file from storage if it exists
+          await deleteObject(storageRef);
+      } catch (error: any) {
+          // If the file doesn't exist, we can ignore the error and proceed
+          if (error.code !== 'storage/object-not-found') {
+              toast({
+                  variant: 'destructive',
+                  title: 'Removal Failed',
+                  description: 'Could not delete the old profile picture from storage.'
+              });
+              setIsUpdatingPhoto(false);
+              return;
+          }
+      }
+
+      try {
+          // Set the photoURL to null in the user's profile
+          await updateProfile(user, { photoURL: null });
+          toast({
+              title: 'Profile Picture Removed',
+              description: 'Your profile picture has been successfully removed.',
+          });
+      } catch (error: any) {
+          toast({
+              variant: 'destructive',
+              title: 'Removal Failed',
+              description: 'Failed to update your profile.'
+          });
+      } finally {
+          setIsUpdatingPhoto(false);
+      }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -145,31 +201,36 @@ export default function SettingsPage() {
     return (
         <div>
             <h1 className="text-2xl font-bold tracking-wider mb-4">Settings</h1>
-            <div className="grid md:grid-cols-2 gap-6">
-                <Card>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>User Profile</CardTitle>
-                        <CardDescription>Your personal account information.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Skeleton className="h-24 w-24 rounded-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                         <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-10 w-full" />
+                        <div className="flex items-center gap-6">
+                            <Skeleton className="h-24 w-24 rounded-full" />
+                             <div className="space-y-2">
+                                <Skeleton className="h-6 w-32" />
+                                <Skeleton className="h-4 w-48" />
+                                <Skeleton className="h-4 w-64 mt-2" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                 <Card>
                     <CardHeader>
                         <CardTitle>Appearance</CardTitle>
-                        <CardDescription>Customize the look and feel of the application.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+                 <Card className="lg:col-span-3">
+                     <CardHeader>
+                        <CardTitle>Security</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-32 w-full" />
                     </CardContent>
                 </Card>
             </div>
@@ -184,11 +245,10 @@ export default function SettingsPage() {
   return (
     <div>
         <h1 className="text-2xl font-bold tracking-wider mb-4">Settings</h1>
-        <div className="grid md:grid-cols-2 gap-6">
-            <Card>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>User Profile</CardTitle>
-                    <CardDescription>Manage your personal account information.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
@@ -197,21 +257,28 @@ export default function SettingsPage() {
                                 <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
                                 <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                             </Avatar>
-                            <button 
-                                onClick={handleFileSelect}
-                                disabled={isUpdatingPhoto}
+                            <div 
                                 className={cn(
-                                    "absolute inset-0 bg-black/50 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity",
+                                    "absolute inset-0 bg-black/60 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity gap-2",
                                     isUpdatingPhoto && "opacity-100 cursor-not-allowed"
                                 )}
                             >
                                 {isUpdatingPhoto ? (
                                     <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    <Edit className="h-6 w-6 text-white" />
+                                    <>
+                                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleFileSelect}>
+                                            <Edit className="h-5 w-5" />
+                                        </Button>
+                                         {user.photoURL && (
+                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={handleRemoveProfilePicture}>
+                                                <X className="h-5 w-5" />
+                                            </Button>
+                                        )}
+                                    </>
                                 )}
                                 
-                            </button>
+                            </div>
                             <Input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                         </div>
                         <div>
@@ -225,14 +292,35 @@ export default function SettingsPage() {
                     </div>
                      {isUpdatingPhoto && (
                         <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Uploading...</p>
+                            <p className="text-sm text-muted-foreground">Updating...</p>
                             <Progress value={uploadProgress} className="w-full" />
                         </div>
                     )}
                 </CardContent>
             </Card>
 
-            <Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Login Providers</CardTitle>
+                    <CardDescription>How you can sign in.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {user.providerData.map((provider: UserInfo) => (
+                        <div key={provider.providerId} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                            <div className="flex items-center gap-3">
+                                <ProviderIcon providerId={provider.providerId} />
+                                <span className="font-medium text-sm capitalize">
+                                    {provider.providerId.split('.')[0]}
+                                </span>
+                            </div>
+                             <Badge variant="outline">Connected</Badge>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+
+
+            <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Security</CardTitle>
                     <CardDescription>Manage your password and security settings.</CardDescription>
@@ -275,12 +363,11 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            <Card className="md:col-span-2">
+            <Card>
                 <CardHeader>
                     <CardTitle>Appearance</CardTitle>
-                    <CardDescription>Switch between light and dark themes.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex items-center justify-between p-6">
+                <CardContent className="flex items-center justify-between">
                     <p className="font-medium">Theme</p>
                     <Button
                         variant="outline"
@@ -296,5 +383,4 @@ export default function SettingsPage() {
         </div>
     </div>
   );
-
-    
+}
