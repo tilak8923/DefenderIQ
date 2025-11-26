@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 4% 94%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 240 4% 94%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 240 4% 94%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 220.9 39.3% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 240 5% 90%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 90%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --warning: 38 92% 50%;
+    --border: 240 6% 83%;
+    --input: 240 6% 83%;
+    --ring: 224 71.4% 4.1%;
+    --radius: 0.5rem;
+    --chart-1: 220.9 39.3% 11%;
+    --chart-2: 0 84.2% 60.2%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 180 70% 50%;
+    --chart-5: 240 70% 50%;
+  }
+
+  .dark {
+    --background: 240 2% 8%;
+    --foreground: 210 20% 98%;
+    --card: 240 2% 8%;
+    --card-foreground: 210 20% 98%;
+    --popover: 240 2% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 20% 88%;
+    --primary-foreground: 0 0% 12%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 210 20% 98%;
+    --warning: 38 92% 50%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 210 20% 88%;
+    --chart-1: 210 20% 88%;
+    --chart-2: 180 70% 50%;
+    --chart-3: 60 70% 50%;
+    --chart-4: 0 70% 50%;
+    --chart-5: 240 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    background-color: #f0ede4;
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .dark body {
+    background-color: #141413;
+  }
+  
+  /* Custom scrollbar styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--secondary));
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+}
+
+@layer components {
+  /* Add smooth transitions to buttons and interactive elements */
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-link, .btn-outline,
+  .card, a, [role="button"] {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .card {
+    @apply hover:border-primary/50;
+  }
+}
